@@ -1,0 +1,53 @@
+---
+layout: default
+---
+
+<div class="row">
+
+<div class="col-md-8 col-xs-12">
+
+	<img class="img-responsive" src="{{'jumbotron.jpg' | prepend: '/img/' | prepend: site.baseurl }}"
+		title="SHIELD: Securing against intruders and other threats through a NFV-enabled environment"/>
+
+	<a class="btn btn-primary btn-lg" style="position:absolute; bottom:42%; right: -21%; max-height:20%"
+		href="{{ 'start.html' | prepend: '/' | prepend: site.baseurl }}"
+        title="Learn more about {{ site.title }}"
+		role="button">Get started</a>
+</div>
+
+</div>
+<div class="row">
+  <div class="col-md-4 col-xs-12">
+    <h3><em aria-hidden="true" class="fa fa-bell-o"></em> Analysis & Remediation</h3>
+    <p class="text-justify">
+	An information-driven
+	<abbr title="Intrusion Detection and Prevention System">IDPS</abbr>
+	predicts specific threats by using
+	<strong>Big Data</strong> and <strong>Machine Learning</strong>
+	to analyse the environment data.
+	</p>
+  </div>
+
+<div class="col-md-4 col-xs-12">
+    <h3><em aria-hidden="true" class="fa fa-cubes"></em> Virtualised Network</h3>
+    <p class="text-justify">
+	NFV virtualises the network and security appliances (
+	<abbr title="Virtual Network Security Functions">vNSFs</abbr>).
+	These are handled by a <strong>vNSFs orchestrator</strong>
+	and available from the <strong>vNSFs store</strong>.
+	</p>
+  </div>
+
+  <div class="col-md-4 col-xs-12">
+    <h3><em aria-hidden="true" class="fa fa-heartbeat"></em> Secure Environment</h3>
+    <p class="text-justify">
+	The <strong>trustworthiness</strong> of the platform and environment
+	is determined by techniques related to <abbr title="Trusted Computing">
+	Trusted Computing</abbr> and leverages the
+	<abbr title="Trusted Platform Module">TPM</abbr> hardware.
+	</p>
+  </div>
+</div>
+
+<br/>
+{% include partners-banner.html %}
