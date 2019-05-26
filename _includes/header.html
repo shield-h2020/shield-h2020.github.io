@@ -24,9 +24,6 @@
   {% assign p = site.pages | where:"url", item_url | first %}
   {% if p.title %}
   {% assign href = p.url | prepend: site.baseurl %}
-  {% if (item_url == '/docs/') %}
-    {% assign href = href | append: 'latest/' %}
-  {% endif %}
         <li class="{{ link_class }}">
           <a class="page-link" href="{{ href }}" title="{{ p.title }}">{{ p.title }}</a>
         </li>

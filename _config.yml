@@ -22,25 +22,18 @@ baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://shield-h2020.github.io"
 githuburl: "http://github.com/shield-h2020"
 siteurl: "https://www.shield-h2020.eu"
-github_username:  shield-h2020
+github_username: shield-h2020
 
 # Build settings
 markdown: kramdown
 theme: minima
 
-collections:
-  news:
-    output: true
-    permalink: /news/:year-:month-:day-:title.html
-  partners:
-    output: true
-    permalink: /about/consortium/:title.html
-
-google_analytics_id: UA-84944136-1
-
 sass:
   style: :compressed
 
-dataurl: "https://data.shield-h2020.eu"
+collections:
+  partners:
+    output: true
+    permalink: /about/consortium/:title.html
 
 future: true
