@@ -3,4 +3,57 @@ title: Architecture
 layout: page
 ---
 
-...
+<div class="row">
+	<div class="col-xs-12 col-md-7">
+
+		<p class="text-justify">
+			The designed high-level architecture for the SHIELD platform is articulated around different components, illustrated in the figure below.
+		</p>
+
+		<p class="text-justify">
+			<img class="media-object" style="margin-left: auto; margin-right: auto; zoom: .8;" src="{{ 'architecture.png' | prepend: '/img/misc/' | prepend: site.baseurl }}" alt="Architecture of the SHIELD platform" title="Architecture of the SHIELD platform"/>
+		</p>
+
+		<h3>vNSF Ecosystem</h3>
+
+		<h4>vNSF Store</h4>
+		<p class="text-justify">
+			The store holds a record of Network Services (NS) and Virtual Network Security Functions (vNSF) related information. It allows the developer to onboard the vNSF and NS packages into a catalog that is later accessible to the vNSF Orchestrator.
+		</p>
+
+		<p class="text-justify">
+			Any package uploaded is a wrapper of the structure used by the <strong>NFVO</strong> (here, OSM). The package contains some extra files with metadata on the package (e.g., the OSM version, hashes of different files, etc). This makes it possible to validate the trustworthiness of other uploaded package.
+		</p>
+
+		<h4>vNSF Orchestrator</h4>
+		<p class="text-justify">
+			The orchestrator provides interfaces to the different components in the SHIELD platform to operate with components running in the <strong>NFVI</strong> (that is, the NFVO and SDN controller).
+		</p>
+
+		<p class="text-justify">
+			As its main operation, it is able to deploy the Network Services into any given infrastructure and manage its lifecycle. Specifically, it can deploy and undeploy the virtual services into a <strong>VIM</strong>, as well as start and stop the service running in the <strong>VDU</strong>.
+		</p>
+
+		<p class="text-justify">
+			The orchestrator also allows to configure the Network Services during its instantiation (Day-0), initialisation (Day-1) or during runtime (Day-2). This work is done through the usage of actions -- which are defined in the descriptor and implemented by Canonical's Juju charms.
+			The instantiation and initialisation phases are run by OSM during the deployment. During this phase, the actions defined in the initialisation phase of the descriptor will take place.
+			Finally, at any time during the operation of the Network Service it is possible to carry out any of the available actions.
+		</p>
+
+		<p class="text-justify">
+			On the other hand, the orchestrator provides many other features. It persists the nodes in the infrastructure (as manually defined initially by the operator of each infrastructure) and uses this knowledge to request both initial and periodic attestation operations on such nodes. In case the attestation determines some untrusted state, the orchestrator will proceed with the predefined actions to revert the status to a trusted one.
+		</p>
+
+		<h3>Trusted Infrastructure</h3>
+
+		<h4>Trust Monitor</h4>
+		<p class="text-justify">
+			Once deployed, vNSFs and NSs are verified by the Trust Monitor on bootstrap and at runtime (along with the other nodes from the infrastructure, as mentioned above). Therefore, the Trust Monitor assesses their trustworthiness at all times.
+		</p>
+
+		<p class="text-justify">
+			Depending on the type of node to verify, this component checks on specific bits of information. For instance, to verify that a switch is in a trusted state, both the i) internal configuration and ii) flows are verified against a trusted set or register. Likewise, to verify the state of a physical host, a set of internal configurations will be checked against the expected state. This is done by leveraging on <strong>TC</strong> techniques and on the <strong>TPM</strong> chips.
+		</p>
+
+	</div>
+</div>
