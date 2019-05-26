@@ -22,7 +22,7 @@ layout: page
 		</p>
 
 		<p class="text-justify">
-			Any package uploaded is a wrapper of the structure used by the <strong>NFVO</strong> (here, OSM). The package contains some extra files with metadata on the package (e.g., the OSM version, hashes of different files, etc). This makes it possible to validate the trustworthiness of other uploaded package.
+			Any package uploaded is a wrapper of the structure defined by the <strong>NFVO</strong> (here, OSM). The package contains some extra files with metadata on the package (e.g., the OSM version, hashes of different files, etc). This makes it possible to validate the trustworthiness of other uploaded package.
 		</p>
 
 		<h4>vNSF Orchestrator</h4>
@@ -44,6 +44,11 @@ layout: page
 			On the other hand, the orchestrator provides many other features. It persists the nodes in the infrastructure (as manually defined initially by the operator of each infrastructure) and uses this knowledge to request both initial and periodic attestation operations on such nodes. In case the attestation determines some untrusted state, the orchestrator will proceed with the predefined actions to revert the status to a trusted one.
 		</p>
 
+		<h4>Network</h4>
+		<p class="text-justify">
+			The network, in this diagram, is a loose term to encompass the NFVI with the VIM and any ancillary network device, physical server or virtual node that serves the operation of the platform (e.g., an SDN controller), as well as the different vNSFs and NSs that are deployed and managed by the NFVO. This kind of network layer operates at a lower layer than the SHIELD platform and must be therefore defined and prepared beforehand (e.g., multiple VIMs must be interconnected in advance) and externally to the deployment of the SHIELD platform. Similarly, the definition and development of the vNSF and NS packages is alien to the platform and conforms to the structure defined in OSM (the platform provides support for releases TWO, FOUR and FIVE).
+		</p>
+
 		<h3>Trusted Infrastructure</h3>
 
 		<h4>Trust Monitor</h4>
@@ -53,6 +58,43 @@ layout: page
 
 		<p class="text-justify">
 			Depending on the type of node to verify, this component checks on specific bits of information. For instance, to verify that a switch is in a trusted state, both the i) internal configuration and ii) flows are verified against a trusted set or register. Likewise, to verify the state of a physical host, a set of internal configurations will be checked against the expected state. This is done by leveraging on <strong>TC</strong> techniques and on the <strong>TPM</strong> chips.
+		</p>
+
+		<h3>Big Data Analytics</h3>
+
+		<h4>Data Analysis and Remediation Engine</h4>
+		<p class="text-justify">
+			The DARE is an information-driven Intrusion Detectionn and Prevention System (<strong>IDPS</strong>) platform that stores and analyses heterogeneous network information, previously collected via monitoring vNSFs. It makes use of cognitive and analytical
+			components capable of predicting specific vulnerabilities and attacks (for instance, Spot).
+		</p>
+
+		<p class="text-justify">
+			The processing and analysis of large amounts of data is carried out by using <strong>Big Data</strong>, data analytics and <strong>Machine Learning</strong> (ML) techniques. Data and logs from the vNSFs (placed at strategic locations of the network) are processed here. When a threat is detected, and as a product of such processing, the DARE components provide mitigation recipes (suggestions) to different actors (for instance, the network operator) so that these could be carried out manually.
+		</p>
+
+		<p class="text-justify">
+			It consists of three main components: the data acquisition and storage module, the data analytics engine and the remediation engine.
+
+			<ul>
+				<li>
+					The data acquisition and storage module enables the ingestion of the data sets and its preparation for further processing. Different types of data collectors and workers (defined by Apache Spot) are in use; and therefore supports the main data sources use by any IDPS: network flows, DNS and web proxy log connection and transformation. In the SHIELD platform, the ingest chain is appropriately designed to support both centralised collection with a pre-processing architecture (i.e., pushing raw unprocessed data from the vNSFs to the DARE filesystem); as well as distributed collections (using agents at the monitoring vNSFs to locally preprocess and filter data before dispatching it to the DARE).
+				</li>
+				<li>
+					The data analytics engine leverages two different Data Analytics modules: the cognitive Data Analytics module (produces packet and flow analytics via ML techniques and tools like Apache Spot, Spark, Hadoop Distributed File System (HDFS), Kafka and Hive) and the security Data analysis module (receives network flows from the distributed storage system to detect anomalous behaviours related to security issues; and based on a combination of Big Data analytics and Machine Learning techniques to process and analyse a vast amount of network data, as well as to automatically discover and classify cybersecurity threats). The latter was adapted to collaborate with the former, and thus improve the analysis results carried out by SHIELD.
+				</li>
+				<li>
+					The remediation engine is fed with i) the analysis from the data analytics modules, and ii) alerts and contextual information. With this, it determines a mitigation plan for the existing threats. To do so, it runs in real-time or near-real-time, generating a cybersecurity topology for a detected threat. That is converted into a high-level abstraction of a remediation recipe. The goal of this component is to output a combination of recommendations and alerts that provide relevant threat details to all interested parties using the dashboard and the direct application of countermeasure activities by triggering specific vNSFs via the vNSFO (e.g. block/redirection of network flows).
+				</li>
+			</ul>
+		</p>
+
+		<h4>Security Dashboard</h4>
+		<p class="text-justify">
+			This graphic interface allow different profiles/roles of users to log in and exert specific operations. Operators can access to monitoring information showing an overview of the security status, and they can also take actions and react to any detected vulnerability. Developers and administrators of the platform can upload/onboard the different vNSF and NS packages, respectively. The dashboard allows to define billing settings per Network Service, which are used to measure and charge operations on the services taken by clients.
+		</p>
+
+		<p class="text-justify">
+			Notifications are provided via the dashboard to inform of threat mitigation actions review and application, untrusted nodes alerts and service status.
 		</p>
 
 	</div>
