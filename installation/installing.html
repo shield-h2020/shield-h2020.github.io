@@ -1,5 +1,5 @@
 ---
-title: Installing and configuring
+title: Installing
 layout: page
 ---
 
@@ -7,18 +7,50 @@ layout: page
 	<div class="col-xs-12 col-md-12">
 
 		<p class="text-justify">
-			The SHIELD platform consists of a series of components. Its source code is available in different repositories within the <a class="page-link" href="{{ site.githuburl }}" title="GitHub repository" target="_new">GitHub repository</a>. Each component provides its own README file and may need some third-party tools to be installed and configured previously in order for our software to work.
+			The SHIELD platform consists of a series of components. Its source code is available in different repositories within the <a class="page-link" href="{{ site.githuburl }}" title="GitHub repository" target="_new">GitHub repository</a>. Each component provides its own README file and may need some third-party tools to be installed, as well as require some previous configuration in order for our software to work.
 		</p>
 
-		<h3>vNSF Ecosystem</h3>
+		<p class="text-justify">
+			The following components are described:
+			<ul>
+				<li>
+					vNSF Ecosystem
+					<ul>
+						<li>
+							<a href="#vnsf-store">vNSF Store</a>
+						</li>
+						<li>
+							<a href="#vnsf-orchestrator">vNSF Orchestrator</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Trusted Infrastructure
+					<ul>
+						<li>
+							<a href="#trust-monitor">Trust Monitor</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Big Data Analytics
+					<ul>
+						<li>
+							<a href="#security-dashboard">Security Dashboard</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</p>
 
-		<br/>
+		<h2>vNSF Ecosystem</h2>
 
-		<h4>vNSF Store</h4>
+		<a name="vnsf-store"></a><br/>
+		<h3>vNSF Store</h3>
 		<p class="text-justify">
 			<ol>
 				<li>
-					Download the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone https://github.com/shield-h2020/store.git</pre>
+					Download the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/store' | prepend: site.githuburl }}.git</pre>
 				</li>
 				<li>
 					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
@@ -41,7 +73,7 @@ sudo pip install docker-compose</pre>
 					<pre>docker exec docker_store-persistence_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --environment /usr/share/dev/store/docker/.env.production"</pre>
 				</li>
 				<li>
-					Access the store via via cURL calls. Point to the address "http://$host_ip:5050" (the IP of the node where the store runs).
+					Access the component via cURL calls. Point to the address "http://$host_ip:5050" (the IP of the node where the component runs).
 				</li>
 				<li>
 					When you no longer wish to use the component, you may stop its containers:
@@ -52,13 +84,12 @@ sudo pip install docker-compose</pre>
 			</ol>
 		</p>
 
-		<br/>
-
-		<h4>vNSF Orchestrator</h4>
+		<a name="vnsf-orchestrator"></a><br/>
+		<h3>vNSF Orchestrator</h3>
 		<p class="text-justify">
 			<ol>
 				<li>
-					Download the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone https://github.com/shield-h2020/nfvo.git</pre>
+					Download the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/nfvo' | prepend: site.githuburl }}.git</pre>
 				</li>
 				<li>
 					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
@@ -250,11 +281,133 @@ admin_password = adminpass # password for admin user in db</pre>
 					Initially this will create both the volumes for the vNSFO API and the DB. In subsequent runs, the DB volume will be retained and re-used from disk
 				</li>
 				<li>
-					Access the vNSFO API via your browser or via cURL calls. Point to the address "(https_enabled?https:http)://$host:$port" (values defined in "api.conf").
+					Access the component via your browser or via cURL calls. Point to the address "(https_enabled?https:http)://$host:$port" (values defined in "api.conf"). The reference documentation for the REST API calls is defined there
 				</li>
 				<li>
 					When you no longer wish to use the component, you may stop its containers:
 					<pre>./teardown.sh</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h2>Trusted Infrastructure</h2>
+
+		<a name="trust-monitor"></a><br/>
+    <h3>Trust Monitor</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/trust-monitor' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/trust-monitor' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/trust-monitor' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					Install Docker:
+					<pre>sudo apt-get remove docker docker-engine docker.io
+sudo apt-get update
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install docker-ce</pre>
+					Also install Docker-compose:
+					<pre>sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose</pre>
+				</li>
+				<li>Adapt the configuration with your values of choice
+					<dl class="dl-horizontal">
+						<dt>trust_monitor_<br/>django/settings.py</dt>
+						<dd>
+							Configuration to reach the Trust Monitor instance. At least the following must be configured:
+							<pre>CASSANDRA_LOCATION = $WHITELIST_DB_IP # instance running the white-list database
+CASSANDRA_PORT = '9160' # default port where Cassandra runs</pre>
+						</dd>
+					</dl>
+				</li>
+				<li>
+					Start the component:
+					<pre>docker-compose up --build</pre>
+				</li>
+				<li>
+					Access the component via your browser or via cURL calls. Point to the address "http://$host_ip:8443" (the IP of the node where the component runs).
+					The following list of endpoints are available:
+					<ul>
+						<li>
+							Status information on the application: GET on https://$host_ip:443/status/
+						</li>
+						<li>
+							Registration of a node: https://$host_ip:443/register_node/
+							<ul>
+								<li>
+									POST with body: '{"distribution": "<distro (e.g. CentOS7/HPE)>", "hostName": "<host name>",
+	"driver":"OAT/OpenCIT/HPESwitch", "address": "xxx.xxx.xxx.xxx"}'
+								</li>
+								<li>
+									DELETE with body: '{"hostName": "<node-to-unregister>"}'
+								</li>
+							</ul>
+						</li>
+						<li>
+							Attestation of a node: https://$host_ip:443/attest_node/
+							<ul>
+								<li>
+									GET to https://$host_ip:443/nfvi_pop_attestation_info?node_id=<id> or to https://$host_ip:443/nfvi_attestation_info/
+								</li>
+								<li>
+									POST with body: '{"node_list" : [{"node" : "<host name>"}]}'
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>docker-compose rm</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h2>Big Data Analytics</h2>
+
+		<a name="security-dashboard"></a><br/>
+		<h3>Security Dashboard</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/dashboard' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					First, the python-pip <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}/blob/master/docker/requirements-dashboard.txt" title="requirements" target="_new">requirements</a>: <pre>pip install -r requirements-store.txt</pre>
+					Also install Docker:
+					<pre>sudo apt-get install --no-install-recommends apt-transport-https curl software-properties-common python-pip
+curl -fsSL 'https://sks-keyservers.net/pks/lookup?op=get&search=0xee6d536cf7dc86e2d7d56f59a178ac6c6238f52e' | sudo apt-key add -
+sudo add-apt-repository "deb https://packages.docker.com/1.13/apt/repo/ubuntu-$(lsb_release -cs) main"
+sudo apt-get update
+sudo apt-get -y install docker-engine
+sudo pip install docker-compose</pre>
+				</li>
+				<li>
+					Start the component:
+					<pre>cd docker && ./run.sh --environment .env.production --verbose</pre>
+					Then run the following to create the needed persistence volume:
+					<pre>docker exec -it docker_dashboard-persistence_1 bash -c "/usr/share/dev/dashboard/docker/setup-datastore.sh --environment .env.production"</pre>
+				</li>
+				<li>
+					Access the component via your browser or via cURL calls. Point to the address "http://$host_ip/#/shield/home/dashboard" (the IP of the node where the component runs).
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>cd docker && ./run.sh --shutdown</pre>
 					And also prune the system for unused resources:
 					<pre>docker system prune; docker system prune --volumes</pre>
 				</li>
