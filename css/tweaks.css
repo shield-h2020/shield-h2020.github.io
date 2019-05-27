@@ -63,3 +63,106 @@ div.col-md-12>h3 {
 	    font-size: 24px;
 		    border-bottom: 3px solid #b9cdd7;
 }
+
+/* Images */
+
+.welcome-image {
+	background-repeat: no-repeat;
+	min-height: 22em;
+}
+
+/* Buttons */
+
+.welcome-button {
+	max-height:20%;
+	position: relative;
+	right: -6em;
+	top: 12em;
+}
+
+/* Lists and workflows */
+
+p.start-steps {
+  border-top: .2em dashed;
+  border-color: #b9cdd7 !important;
+  margin:0; padding: 30px;
+  counter-increment: section;
+  position: relative;
+}
+p.start-steps:nth-child(odd):before {
+  content: counter(section);
+  right: 100%;
+  margin-right: -1em;
+  position: absolute;
+  border-radius: 50%;
+  padding: .2em;
+	height: 1.7em;
+  width: 1.7em;
+  background-color: #e1f1f9;
+  text-align: center;
+  color: #3b63a8;
+  font-size: 1.7em;
+}
+p.start-steps:nth-child(even):before {
+  content: counter(section);
+  left: 100%;
+  margin-left: -1em;
+  position: absolute;
+  border-radius: 50%;
+  padding: .2em;
+  height: 1.7em;
+  width: 1.7em;
+  background-color: #e1f1f9;
+  text-align: center;
+	color: #3b63a8;
+  font-size: 1.7em;
+}
+p.start-steps:nth-child(odd) {
+  border-left: .2em dashed;
+  border-top-left-radius: 3em;
+  border-bottom-left-radius: 1.7em;
+  margin-right: 1em;
+  padding-right: 1em;
+}
+p.start-steps:nth-child(even) {
+  border-right: .2em dashed;
+  border-top-right-radius: 3em;
+  border-bottom-right-radius: 1.7em;
+  margin-left: 1em;
+  padding-left: 1em;
+}
+p.start-steps:first-child {
+  border-top: 0;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+}
+p.start-steps:last-child {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+p span.start-steps {
+	color: #3b63a8;
+	font-size: 1.5em;
+	text-transform: uppercase;
+}
+p.start-steps-content:nth-child(odd) {
+	padding-left: 2em;
+}
+p.start-steps-content:nth-child(odd) span {
+	padding-right: 2em;
+}
+p.start-steps-content:nth-child(even) {
+	padding-right: 2em;
+}
+p.start-steps-content:nth-child(even) span {
+	padding-left: 2em;
+}
+
+/* General */
+
+.centered {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 100%;
+}
