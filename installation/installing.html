@@ -1,6 +1,265 @@
 ---
-title: Installation guide
+title: Installing and configuring
 layout: page
 ---
 
-...
+<div class="row">
+	<div class="col-xs-12 col-md-12">
+
+		<p class="text-justify">
+			The SHIELD platform consists of a series of components. Its source code is available in different repositories within the <a class="page-link" href="{{ site.githuburl }}" title="GitHub repository" target="_new">GitHub repository</a>. Each component provides its own README file and may need some third-party tools to be installed and configured previously in order for our software to work.
+		</p>
+
+		<h3>vNSF Ecosystem</h3>
+
+		<br/>
+
+		<h4>vNSF Store</h4>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone https://github.com/shield-h2020/store.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					First, the python-pip <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}/blob/master/docker/requirements-store.txt" title="requirements" target="_new">requirements</a>: <pre>pip install -r requirements-store.txt</pre>
+					Also install Docker:
+					<pre>sudo apt-get install --no-install-recommends apt-transport-https curl software-properties-common python-pip
+curl -fsSL 'https://sks-keyservers.net/pks/lookup?op=get&search=0xee6d536cf7dc86e2d7d56f59a178ac6c6238f52e' | sudo apt-key add -
+sudo add-apt-repository "deb https://packages.docker.com/1.13/apt/repo/ubuntu-$(lsb_release -cs) main"
+sudo apt-get update
+sudo apt-get -y install docker-engine
+sudo pip install docker-compose</pre>
+				</li>
+				<li>
+					Start the component:
+					<pre>cd docker && ./run.sh --environment .env.production --verbose</pre>
+					Then run the following to create the needed persistence volume:
+					<pre>docker exec docker_store-persistence_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --environment /usr/share/dev/store/docker/.env.production"</pre>
+				</li>
+				<li>
+					Access the store via via cURL calls. Point to the address "http://$host_ip:5050" (the IP of the node where the store runs).
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>cd docker && ./run.sh --shutdown</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<br/>
+
+		<h4>vNSF Orchestrator</h4>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone https://github.com/shield-h2020/nfvo.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					The <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}/blob/master/bin/deploy.sh" title="requirements" target="_new">following script</a> can be used: <pre>cd bin && ./deploy.sh</pre>
+					This script generates the credentials for the server running the vNSFO API and generates a copy of the sample configuration files
+					Also install Docker:
+					<pre>sudo apt-get install python3 python3-pip -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-get update
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get install docker-ce=17.09.1~ce-0~ubuntu
+sudo usermod -G docker $(whoami)
+sudo pip3 install docker-compose==1.17.1</pre>
+				</li>
+				<li>
+					For each configuration folder, adapt with your values of choice. Configurations are available under the "conf" folder
+
+					<dl class="dl-horizontal">
+					  <dt>api.conf</dt>
+					  <dd>
+							Determines the information of the server that runs the vNSFO API.
+							<pre>[general]
+    host = 0.0.0.0 # to serve it publicly or any other specific IP
+    port = 8448 # port where the vNSFO API runs
+    debug = True # enable or disable debug messages in the vNFO API logs (these can be checked via "docker logs -f docker_nfvo_1")
+
+[security]
+    https_enabled = True # enable or disable the vNSFO being served over HTTPS
+    verify_client_cert = False # enable or disable the enforcement to trust the certificate of the client interacting with the vNSFO API</pre>
+						</dt>
+						<dt>attacks.conf</dt>
+					  <dd>
+							Provides the mapping between the attacks identified in the DARE with the NSs instantiated by the vNSFO.
+							<pre>[general]
+    default = l3filter_nsd # name of the NS package that will be instantiated to remediate an attack by default
+		# name of the NS package that will be instantiated to remediate an attack identified by DARE with the name in the left
+    Worm = l3filter_nsd
+    Wannacry = l3filter_nsd
+    DoS = l3filter_nsd
+    TCP flood = l3filter_nsd
+    tcp_flood = l3filter_nsd
+    UDP flood = l3filter_nsd
+    udp_flood = l3filter_nsd
+    Slowloris = l3filter_nsd
+    dns_results = l3filter_nsd
+    DNS tunneling = l3filter_nsd
+    Cryptocurrency Mining = l3filter_nsd</pre>
+						</dd>
+						<dt>db.conf</dt>
+					  <dd>
+							Configuration of the Mongo database.
+							<pre>[general]
+host = nfvo-db # Mongo DB exposed address
+port = 27017 # Mongo DB exposed port
+
+[db]
+name = shield-nfvo # name of the db to insert collections
+user = user # user id for db
+password = user # password for user in db
+auth_source = admin # authSource parameter used by db
+admin_username = admin # admin user id for db
+admin_password = adminpass # password for admin user in db</pre>
+						</dd>
+						<dt>isolation.conf</dt>
+					  <dd>
+							Configuration of the values required for the isolation and termination processes. <strong>Note</strong> that 2 KVM-based instances and 1 Docker-based instance are allowed.
+							<pre>[scripts]
+    path = src/templates/isolation # path to the templates that will be used to perform isolation and termination procedures
+    shutdown = shutdown.sh # default file to execute a node shutdown
+    delflow = delflow.sh # default file to execute a flow removal
+    ifdown = ifdown.sh # default file to execute an interface deactivation
+
+    [keys]
+    default_username = ubuntu # default user name that allows access to the virtual nodes deployed
+    default_key = keys/default.pem # relative path (from the repo source) to the key that should be inserted in the nodes deployed (i.e., via the VIM)
+
+    [commands]
+    default_shutdown = sudo poweroff # default shutdown command to terminate nodes
+
+    [kvm_vim_1]
+    vim_account_id = d4ec6514-4760-47f5-914e-df951ac20dec # UUID in OSM of a specific KVM-based VIM
+    identity_endpoint = https://openstack.shield.yourorganisation:5000/v3 # OpenStack endpoint for the identity service
+    username = shield # username for the OpenStack identity service
+    password = shield # password for the OpenStack identity service
+    project_name = shield # project/tenant name to use in OpenStack
+    domain_name = default # domain name to access OpenStack
+
+    [kvm_vim_2]
+    vim_account_id = 0cc01f33-f66d-47bd-8124-ca7ff2dbfc85 # UUID in OSM of a specific KVM-based VIM
+    identity_endpoint = http://10.102.10.48:5000/v3 # OpenStack endpoint for the identity service
+    username = shield # username for the OpenStack identity service
+    password = shield # password for the OpenStack identity service
+    project_name = shield # project/tenant name to use in OpenStack
+    domain_name = default # domain name to access OpenStack
+
+    [docker_vim]
+    vim_account_id = 260c6bfc-5b52-4341-96a0-72cbd254c662 # UUID in OSM of a specific Docker-based VIM
+    identity_endpoint = http://10.102.10.49:6001/v3.0 # OpenStack-like endpoint for the identity service
+    username = admin # username for the OpenStack-like identity service
+    password = admin # password for the OpenStack-like identity service
+    project_name = admin # project/tenant name to use in OpenStack
+    domain_name = default  # domain name to access OpenStack</pre>
+						</dd>
+						<dt>nfvo.conf</dt>
+					  <dd>
+							Configuration of the NFVO endpoints (for both OSMr2 and OSMr4/OSMr5), as well as credentials and other information.
+							<pre># OSMr2 configuration
+[general]
+    host = 10.102.10.50 # OSMr2 endpoint for the SO service
+    port = 8000 # OSMr2 port for the SO service
+    default_kvm_datacenter = d4ec6514-4760-47f5-914e-df951ac20dec # UUID in OSM of a specific KVM-based VIM
+    default_docker_datacenter = 260c6bfc-5b52-4341-96a0-72cbd254c662 # UUID in OSM of a specific Docker-based VIM
+    default_kvm_datacenter_net = provider # name of the management network for the KVM-based VIM (connecting the NFVO to the VNFs)
+    default_docker_datacenter_net = default # name of the management network for the Docker-based VIM (connecting the NFVO to the VNFs)
+
+[package]
+    host = 10.102.10.50 # OSMr2 endpoint for the package operations
+    port = 443 # OSMr2 port for the package operations
+
+[ro]
+    host = 10.102.10.50 # OSMr2 endpoint for the RO service
+    port = 9090 # OSMr2 port for the RO service
+
+# OSMr4/OSMr5 configuration
+[nbi]
+    protocol = https # protocol under which OSM is served
+    host = 10.102.10.51 # OSMr5 exposed endpoint
+    port = 9999 # OSMr5 exposed port
+    username = admin # username to access the OSMr5 endpoint
+    password = admin # password to access the OSMr5 endpoint
+    default_kvm_datacenter = d4ec6514-4760-47f5-914e-df951ac20dec # UUID in OSM of a specific KVM-based VIM
+    default_docker_datacenter = 260c6bfc-5b52-4341-96a0-72cbd254c662 # UUID in OSM of a specific Docker-based VIM
+    default_kvm_datacenter_net = provider # name of the management network for the KVM-based VIM (connecting the NFVO to the VNFs)
+    default_docker_datacenter_net = default # name of the management network for the Docker-based VIM (connecting the NFVO to the VNFs)
+    default_flavor = m1.small # default flavour to be used in OpenStack</pre>
+						</dd>
+						<dt>nfvo.mspl.conf</dt>
+					  <dd>
+							Configuration of the MSPL-related operations to be received by the vNSFO API.
+							<pre>[monitoring]
+    timeout = 3600 # time (in milliseconds) to wait for outcome of the monitoring process to check the operational and configuration status for the instantiated VNFs
+    interval = 5 # time (in seconds) between the monitoring process is called again
+    target_status = running # target status that a VNF should reach to consider the instantiation to be successful</pre>
+						</dd>
+						<dt>sdn.conf</dt>
+					  <dd>
+							Data related to the SDN controller and the network device the vNSFO API interacts with. <strong>Note</strong> that 1 controller (ODL Carbon) and 1 device are allowed.
+							<pre>[general]
+    push_delay = 10000 # delay between pushing any rule and attesting (in milliseconds)
+
+[controller]
+    protocol = http # protocol under which ODL is served
+    host = 10.102.10.52 # ODL exposed endpoint
+    port = 8181 # ODL exposed port
+    username = admin # username to access ODL
+    password = admin # password to access ODL
+
+[infrastructure]
+    default_device = openflow:112591078470795328 # dpid of the switch
+    default_table = 0 # default table</pre>
+						</dd>
+						<dt>tm.conf</dt>
+					  <dd>
+							Configuration to reach the Trust Monitor instance.
+							<pre>[general]
+    host = 10.102.10.53 # Trust Monitor exposed address
+    port = 443 # Trust Monitor exposed port
+    protocol = https # protocol under which the Trust Monitor is served
+    default_analysis_type = load-time+cont-check,l_req=l4_ima_all_ok|==,cont-list= # identifier of the analysis to carry out
+    default_pcr0 = example # default PCR0 value
+    default_distribution = CentOS7 # default Operating System distribution for the attestation
+    default_driver = linux # default driver to perform the attestation
+    default_node = nfvi-node # name in OSM of the default Docker-based VIM to attest</pre>
+						</dd>
+						<dt>tm.sdn.reference.json</dt>
+					  <dd>
+							Trusted set of flows that act as a reference for the SDN attestation of the flows in the switch.
+							This equals to the compressed JSON output of the operational endpoint (e.g., "<em>http://10.102.10.52:8181/restconf/operational/opendaylight-inventory:nodes/node/openflow:112591078470795328/flow-node-inventory:table/0</em>") in ODL.
+						</dd>
+					</dl>
+
+				</li>
+				<li>
+					Start the component:
+					<pre>./setup.sh</pre>
+					Initially this will create both the volumes for the vNSFO API and the DB. In subsequent runs, the DB volume will be retained and re-used from disk
+				</li>
+				<li>
+					Access the vNSFO API via your browser or via cURL calls. Point to the address "(https_enabled?https:http)://$host:$port" (values defined in "api.conf").
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>./teardown.sh</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+	</div>
+</div>
