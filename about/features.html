@@ -3,4 +3,54 @@ title: Features
 layout: page
 ---
 
-...
+<div class="row">
+	<div class="col-xs-6 col-md-6">
+
+		<h3>Attestation-related</h3>
+
+		<h4>Infrastructure attestation</h4>
+		<p class="text-justify">
+      A network operator initially defines the list of nodes available from their infrastructure and registers them into the SHIELD platform using the vNSFO API -- so that these are visible to the SHIELD platform. This calls the Trust Monitor, which performs both an initial attestation during the registration phase (<em>newcomer attestation</em>) and also a <em>periodic attestation</em>.
+      In case the attestation fails (i.e., it indicates that the state of the node is untrusted), it is up to the network operator to directly call the endpoint in the vNSFO API that executes the suggested remediation. Upon calling such endpoint, some basic networking information of the node is collected by the vNSFO API and then the node is isolated.
+		</p>
+
+    <h4>Network Service attestation</h4>
+		<p class="text-justify">
+      In a similar fashion, when a (container-based) NS is instantiated by the vNSFO API (in a <strong><a class="page-link" href="https://osm.etsi.org/gitweb/?p=osm/vim-emu.git;a=tree" title="vim-emu" target="_new">vim-emu</a></strong> VIM or similar), the Trust Monitor is requested to carry out a newcomer attestation on such node. At the end of this project there is no attestation for NSs based in typical hypervisors (such as KVM).
+		</p>
+
+    <h3>General</h3>
+
+    <h4>Simplicity to use external components</h4>
+    <p class="text-justify">
+      The vNSFO API acts as a broker between the components in the SHIELD platform and also between the NFVI, VIM and ancillary nodes (such as the NFVO, the SDN controller or the VIM). Some typically used features from these ancillary nodes can be directly used from this API, whilst introducing some internal logic to ease the way to call such features. Examples of that are the onboarding of vNSF and NS packages, its instantiation and removal and its configuration (NFVO instance), the insertion and deletion of flows in the default table of the switch (SDN controller) and a direct way to check the list of images for the vNSFs and to upload one of them (VIM node).
+    </p>
+
+	</div>
+
+	<div class="col-xs-6 col-md-6">
+
+    <h3>NFV-related</h3>
+
+    <h4>Support for multiple NFVO versions</h4>
+    <p class="text-justify">
+      The vNSFO API supports three different releases of the chosen NFVO (OSM). These are release TWO, FOUR and FIVE. That means that the vNSF Orchestrator in SHIELD can operate with different versions of the NFVO.
+    </p>
+
+    <h4>Support for multiple NFVO-based package schemas</h4>
+    <p class="text-justify">
+      Similarly, the Store supports different versions of the vNSF and NS packages: descriptors can follow the format defined until release TWO and also the format defined from release THREE onwards (and, at least, used by release FIVE).
+    </p>
+
+    <h4>vNSF and NS catalogue</h4>
+    <p class="text-justify">
+      As an outcome of the project, multiple vNSFs and NSs have been uploaded to the <a class="page-link" href="{{ '/vnsfs' | prepend: site.githuburl }}" title="vNSF and NS catalogue" target="_new">vNSF and NS catalogue</a>. These are licensed under Apache 2.0 and can be used according to such terms. The repository holds scripts to generate OSM-compliant packages for the vNSFs and NSs for a specific release of the NFVO -- which can later be onboarded via the vNSFO API (vNSF Orchestrator) or directly via the NFVO. Note that VIM images are expected to be registered previously in your VIM of choice (e.g., OpenStack) and that these are not provided in the catalogue.
+    </p>
+
+    <h4>Validation of packages</h4>
+    <p class="text-justify">
+      SHIELD extends the OSM packages with features to verify the integrity of a package that is onboarded (such features are not available at least until release FIVE). To this end, an OSM package for a vNSF or NS can be wrapped into a SHIELD package with the scripts are provided in the vNSF and NS repository. When such SHIELD package is onboarded via the vNSF Store, a process will be run to determine that the package is not tampered with, so that it can be demonstrated to be "as it was" during the upload by the developer.
+    </p>
+
+  </div>
+</div>
