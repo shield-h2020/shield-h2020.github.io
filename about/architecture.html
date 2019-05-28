@@ -77,7 +77,17 @@ layout: page
 
 			<ul>
 				<li>
-					The data acquisition and storage module enables the ingestion of the data sets and its preparation for further processing. Different types of data collectors and workers (defined by Apache Spot) are in use; and therefore supports the main data sources use by any IDPS: network flows, DNS and web proxy log connection and transformation. In the SHIELD platform, the ingest chain is appropriately designed to support both centralised collection with a pre-processing architecture (i.e., pushing raw unprocessed data from the vNSFs to the DARE filesystem); as well as distributed collections (using agents at the monitoring vNSFs to locally preprocess and filter data before dispatching it to the DARE).
+					The data acquisition and storage module enables the ingestion of the data sets and its preparation for further processing. Different types of data collectors and workers (defined by Apache Spot) are in use. Whilst Apache Spot supports the main data sources used by any IDPS (network flows, DNS and web proxy log connection and transformation), the DARE supports netflow. In the SHIELD platform, the ingest chain is appropriately designed to support both centralised collection with a pre-processing architecture (i.e., pushing raw unprocessed data from the vNSFs to the DARE filesystem as part of the anomaly detection process); as well as distributed collections (using agents at the monitoring vNSFs to locally preprocess and filter data before dispatching it to the DARE).
+
+					The workers obtain the information from Kafka (by listening to a particular topic of the Kafka cluster) and make these available for later processing with Spot. Supported workers are as follows:
+						<ul>
+							<li>
+								The <strong>streaming worker</strong>; consumes the incoming messages on a given topic from Kafka. The streaming data is divided into batches and are deserialized by the worker according to the supported Avro schema, parsed and registered in the corresponding table of Hive
+							</li>
+							<li>
+								The <strong>simple worker</strong>; consumes incoming messages on a given topic/partition from Kafka and stores these into HDFS
+							</li>
+						</ul>
 				</li>
 				<li>
 					The data analytics engine leverages two different Data Analytics modules: the cognitive Data Analytics module (produces packet and flow analytics via ML techniques and tools like Apache Spot, Spark, Hadoop Distributed File System (HDFS), Kafka and Hive) and the security Data analysis module (receives network flows from the distributed storage system to detect anomalous behaviours related to security issues; and based on a combination of Big Data analytics and Machine Learning techniques to process and analyse a vast amount of network data, as well as to automatically discover and classify cybersecurity threats). The latter was adapted to collaborate with the former, and thus improve the analysis results carried out by SHIELD.

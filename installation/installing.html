@@ -36,7 +36,30 @@ layout: page
 					Big Data Analytics
 					<ul>
 						<li>
+							<a href="#data-acquisition-storage">Data acquisition and storage</a>
+						</li>
+						<li>
+							<a href="#dare-workers">DARE Workers</a>
+						</li>
+						<li>
 							<a href="#security-dashboard">Security Dashboard</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Infrastructure
+					<ul>
+						<li>
+							<a href="#big-data-cluster">Big Data cluster</a>
+						</li>
+						<li>
+							<a href="#vnf-vim">VIM for the VNFs</a>
+						</li>
+						<li>
+							<a href="#nfvo">NFVO</a>
+						</li>
+						<li>
+							<a href="#sdn-controller">SDN controller</a>
 						</li>
 					</ul>
 				</li>
@@ -318,7 +341,8 @@ sudo apt-get install docker-ce</pre>
 					<pre>sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose</pre>
 				</li>
-				<li>Adapt the configuration with your values of choice
+				<li>
+					Adapt the configuration with your values of choice
 					<dl class="dl-horizontal">
 						<dt>trust_monitor_<br/>django/settings.py</dt>
 						<dd>
@@ -412,6 +436,277 @@ sudo pip install docker-compose</pre>
 					<pre>docker system prune; docker system prune --volumes</pre>
 				</li>
 			</ol>
+		</p>
+
+		<a name="data-acquisition-storage"></a><br/>
+		<h3>Data acquisition and storage</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Install the dependencies for the component:
+					<ul>
+						<li>
+							<a class="page-link" href="http://spark.apache.org/docs/latest/#launching-on-a-cluster" title="Spark installation" target="_new">Spark 2.2</a>
+						</li>
+						<li>
+							<a class="page-link" href="https://bigdl-project.github.io/0.8.0/" title="BigDL documentation" target="_new">BigDL 0.8.0</a>
+						</li>
+					</ul>
+					Then, install the python-pip packages: <pre>pip install pyspark==2.2.0.post0</pre>
+				</li>
+			</ol>
+		</p>
+
+		<a name="dare-workers"></a><br/>
+		<h3>DARE Workers</h3>
+
+		<h4>Streaming Worker</h4>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/dare-workers' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies for the component.<br/>
+					First, the packages from the Operating System: <pre>sudo apt-get install python-pip python-virtualenv zip</pre>
+					Then, install the python-pip packages: <pre>pip install avro</pre>
+				</li>
+				<li>
+					Adapt the configuration with your values of choice
+					<dl class="dl-horizontal">
+						<dt>.worker.json</dt>
+						<dd>
+							Configuration of a given worker:
+							<pre>{
+  "database": "spotdb", # name of the Hive DB where data is ingested
+  "kerberos": { # configuration for the network authentication protocol
+    "kinit": "/usr/bin/kinit",
+    "principal": "spotuser",
+    "keytab": "/opt/security/spotuser.keytab"
+  },
+  "zkQuorum": "cloudera01:2181" # Zookeeper connection string
+}</pre>
+						</dd>
+					</dl>
+				</li>
+				<li>
+					Start the component:
+					<pre>./run.sh -t "pipeline_configuration" --topic "my_topic" -p "num_of_partition"
+# Examples
+./run.sh -t flow --topic SPOT-INGEST-TEST-TOPIC -p 1
+./run.sh -t flow --topic SPOT-INGEST-TEST-TOPIC -p 1 2>/tmp/spark2-submit.log
+./run.sh -t dns --topic SPOT-INGEST-DNS-TEST-TOPIC -p 2 -a AppIngestDNS -b 10 -g DNS-GROUP</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h4>Simple Worker</h4>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/dare-workers' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					First, the packaes from the Operating System: <pre>sudo apt-get -y install python-virtualenv</pre>
+					Then, install the python-pip packages: <pre>virtualenv --no-site-packages venv
+source venv/bin/activate
+pip install -r requirements.txt</pre>
+				</li>
+				<li>
+					Install the worker
+					<pre>python setup.py install</pre>
+				</li>
+				<li>
+					Adapt the configuration with your values of choice
+					<dl class="dl-horizontal">
+						<dt>.worker.json</dt>
+						<dd>
+							Configuration of a given worker:
+							<pre>{
+	"consumer": { # configuration parameters for the KafkaConsumer
+		"bootstrap_servers": ["kafka_server:kafka_port"],
+		"group_id": ""
+	},
+	"kerberos": { # configuration for the network authentication protocol
+		"kinit": "/usr/bin/kinit",
+		"principal": "user",
+		"keytab": "/opt/security/user.keytab"
+	},
+}
+</pre>
+						</dd>
+					</dl>
+				</li>
+				<li>
+					Start the component:
+					<pre>s-worker --topic "my_topic" -p "num_of_partition" -d "path_to_HDFS"
+# Examples
+s-worker --topic SPOT-INGEST-TEST-TOPIC -p 0 -d /user/spotuser/flow/stage
+s-worker --topic SPOT-INGEST-DNS-TEST-TOPIC -p 0 -d /user/spotuser/dns/stage --parallel-processes 8 -i 30
+s-worker --topic SPOT-INGEST-TEST-TOPIC -p 2 -d /user/spotuser/flow/stage -l DEBUG</pre>
+				</li>
+				<li>
+					When you no longer wish to use the component, you may deactivate its virtual environment:
+					<pre>deactivate
+rm -r venv/</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h2>Infrastructure</h2>
+
+		<a name="big-data-cluster"></a><br/>
+		<h3>Big Data cluster</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Install the dependencies for the Spot framework:
+					<ul>
+						<li>
+							<a class="page-link" href="https://www.cloudera.com/downloads/manager/5-12-0.html" title="Cloudera Express documentation" target="_new">Cloudera Express 5.12.0</a>
+						</li>
+						<li>
+							Java HotSpot(TM) 64-Bit Server VM, version 1.8.0_151
+						</li>
+						<li>
+							The following <a class="page-link" href="https://www.cloudera.com/documentation/enterprise/release-notes/topics/cm_vd_cdh_package_tarball_512.html#concept_e2c_aon_yk" title="Cloudera Express services" target="_new">Cloudera Express services</a>: HDFS, HIVE, IMPALA, SPARK (yarn) (spark 1.6 and spark 2.3), YARN, ZOOKEEPER
+						</li>
+					</ul>
+					And finally install <a class="page-link" href="http://spot.incubator.apache.org/doc/" title="Spot documentation" target="_new">Spot</a>.
+				</li>
+				<li>
+					Install the following Spot components:
+					<ul>
+						<li>
+							<strong>spot-setup</strong>: scripts that create the required HDFS paths, HIVE tables and configuration for Apache Spot (incubating).  Must be located in the Ingest VM
+						</li>
+						<li>
+							<strong>spot-ingest</strong>: binary and log files are captured or transferred into the Hadoop cluster, where they are transformed and loaded into solution data stores. Must be located in the Ingest VM
+						</li>
+						<li>
+							<strong>spot-ml</strong>: machine learning algorithms are used for anomaly detection. Must be located in the ClusterOrchestrator
+						</li>
+						<li>
+							<strong>spot-oa</strong>: data output from the machine learning component is augmented with context and heuristics, then is available to the user for interacting with it. Must be located in the ClusterOrchestrator
+						</li>
+					</ul>
+				</li>
+				<li>
+					The nodes available to the Big Data cluster must each have a defined role in Cloudera:
+					<ul>
+						<li>
+							<strong>Orchestrator</strong>: configured as the Master Node, includes all the management services and required gateways. Moreover, the ML and OA components are located in this host
+						</li>
+						<li>
+							<strong>Worker 1</strong>: configured as a Worker Node
+						</li>
+						<li>
+							<strong>Worker 2</strong>: configured as a Worker Node
+						</li>
+						<li>
+							<strong>Ingest (big-shield)</strong>: configured as a Ingest Node. Includes the Impala and HIVE components
+						</li>
+					</ul>
+				</li>
+				<li>Configure the services in Cloudera as follows:
+					<dl class="dl-horizontal">
+						<dt>HDFS</dt>
+					  <dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Balancer		N/A		ClusterOrchestrator	Commissioned		Balancer Default Group
+DataNode		Started		worker2			Commissioned		DataNode Default Group
+DataNode		Started		worker1			Commissioned		DataNode Default Group
+NameNode (Active)	Started		ClusterOrchestrator	Commissioned		NameNode Default Group
+SecondaryNameNode	Started		ClusterOrchestrator	Commissioned		SecondaryNameNode Default Group</pre>
+						</dd>
+					  <dt>HIVE</dt>
+					  <dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Gateway			N/A		worker2			Commissioned		Gateway Default Group
+Gateway			N/A		worker1			Commissioned		Gateway Default Group
+Gateway			N/A		ClusterOrchestrator	Commissioned		Gateway Default Group
+Gateway			N/A		big-shield		Commissioned		Gateway Default Group
+Hive Metastore Server	Started		ClusterOrchestrator	Commissioned		Hive Metastore Server Default Group
+HiveServer2		Started		ClusterOrchestrator	Commissioned		HiveServer2 Default Group</pre>
+						</dd>
+						<dt>Impala</dt>
+					  <dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Impala Catalog Server	Started		ClusterOrchestrator	Commissioned		Impala Catalog Server Default Group
+Impala Daemon		Started		worker2			Commissioned		Impala Daemon Default Group
+Impala Daemon		Started		worker1			Commissioned		Impala Daemon Default Group
+Impala Daemon		Started		ClusterOrchestrator	Commissioned		Impala Daemon Default Group
+Impala Daemon		Stopped		big-shield		Commissioned		Impala Daemon Default Group
+Impala StateStore	Started		ClusterOrchestrator	Commissioned		Impala StateStore Default Group</pre>
+						</dd>
+						<dt>Kafka</dt>
+						<dd>
+							<pre>Role Type				State		Host			Commission State	Role Group
+Kafka Broker (Active Controller)	Started		ClusterOrchestrator	Commissioned		Kafka Broker Default Group
+Kafka Broker				Started		big-shield		Commissioned		Kafka Broker Default Group</pre>
+						</dd>
+						<dt>Spark</dt>
+						<dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Gateway			N/A		worker2			Commissioned		Gateway Default Group
+Gateway			N/A		worker1			Commissioned		Gateway Default Group
+Gateway			N/A		ClusterOrchestrator	Commissioned		Gateway Default Group
+Gateway			N/A		big-shield		Commissioned		Gateway Default Group
+History Server		Started		ClusterOrchestrator	Commissioned		History Server Default Group</pre>
+						</dd>
+						<dt>Spark 2</dt>
+						<dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Gateway			N/A		worker2			Commissioned		Gateway Default Group
+Gateway			N/A		worker1			Commissioned		Gateway Default Group
+Gateway			N/A		ClusterOrchestrator	Commissioned		Gateway Default Group
+Gateway			N/A		big-shield		Commissioned		Gateway Default Group
+History Server		Started		ClusterOrchestrator	Commissioned		History Server Default Group</pre>
+						</dd>
+						<dt>YARN <br/>(MR2 included)</dt>
+						<dd>
+							<pre>Role Type		 State		Host			Commission State	Role Group
+Gateway			 N/A		big-shield		Commissioned		Gateway Default Group
+JobHistory Server	 Started	ClusterOrchestrator	Commissioned		JobHistory Server Default Group
+NodeManager		 Started	worker2			Commissioned		NodeManager Default Group
+NodeManager		 Started	worker1			Commissioned		NodeManager Default Group
+NodeManager		 Started	ClusterOrchestrator	Commissioned		NodeManager Default Group
+ResourceManager (Active) Started	ClusterOrchestrator	Commissioned		ResourceManager Default Group</pre>
+						</dd>
+						<dt>ZooKeeper</dt>
+						<dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Server			Started		worker1			Commissioned		Server Default Group
+Server			Started		ClusterOrchestrator	Commissioned		Server Default Group
+Server			Started		big-shield		Commissioned		Server Default Group</pre>
+						</dd>
+					</dl>
+				</li>
+			</ol>
+		</p>
+
+		<a name="vnf-vim"></a><br/>
+		<h3>VIM for the VNFs</h3>
+		<p class="text-justify">
+			In SHIELD, the VIMs in use are both OpenStack (All-in-One, running on top of Centos 7 - centos-release-7-4.1708.el7.centos.x86_64) and vim-emu (a VIM that supports Docker and offers virtualised APIs for OpenStack)
+		</p>
+
+		<a name="nfvo"></a><br/>
+		<h3>NFVO</h3>
+		<p class="text-justify">
+			In SHIELD, the NFVO of choice is OSM. The supported releases are TWO, FOUR, FIVE
+		</p>
+
+		<a name="sdn-controller"></a><br/>
+		<h3>SDN controller</h3>
+		<p class="text-justify">
+			In SHIELD, the SDN controller used in conjuction with the vNSF Orchestrator (specifically with the vNSFO API) and the Trust Monitor is the OpenDayLight (Carbon) controller
 		</p>
 
 	</div>
