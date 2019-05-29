@@ -700,14 +700,104 @@ Server			Started		big-shield		Commissioned		Server Default Group</pre>
 		<a name="nfvo"></a><br/>
 		<h3>NFVO</h3>
 		<p class="text-justify">
-			In SHIELD, the NFVO of choice is OSM. The supported releases are TWO, FOUR, FIVE
+			In SHIELD, the NFVO of choice is OSM. The supported releases are TWO, FOUR, FIVE.
+		</p>
+
+		<h4>OSM release FIVE</h4>
+		<p class="text-justify">
+			OSM releases FOUR and FIVE introduced several changes w.r.t release TWO, both at the end-user side and at the northbound APIs.
+			<ol>
+				<li>
+					Install and configure OSM in your environment by following these <a class="page-link" href="https://osm.etsi.org/wikipub/index.php/OSM_Release_FIVE#Install_OSM_Release_FIVE" title="installation guide" target="_new">installation steps</a>
+				</li>
+				<li>
+					Setup the network configuration.<br/>
+					OSM must be running in a server that is connected to the NFVI PoP (that is, where the VNFs will be instantiated and running). The network interconnecting the OSM VM and the NFVI PoP is the network of "management" type and it is defined in the NFVI PoP itself. For instance, you may use a network called "provider" with range 10.102.10.0/24
+				</li>
+				<li>
+					Configure OSM by defining the VIM(s) with the following values: "<em>name, type=OpenStack, vim url (endpoint for the Openstack Identity service), vim username, vim password, tenant/project name, vim network name=provider</em>"
+				</li>
+			</ol>
 		</p>
 
 		<a name="sdn-controller"></a><br/>
 		<h3>SDN controller</h3>
 		<p class="text-justify">
-			In SHIELD, the SDN controller used in conjuction with the vNSF Orchestrator (specifically with the vNSFO API) and the Trust Monitor is the OpenDayLight (Carbon) controller
+			In SHIELD, the SDN controller used in conjuction with the vNSF Orchestrator (specifically with the vNSFO API) and the Trust Monitor is OpenDayLight in its version "Carbon 0.6.3". The controller enables the control of the SDN switch and allows to dynamically manage its network flow rules.
 		</p>
+
+		<p class="text-justify">
+			<ol>
+				<li>
+					Install Java. It should match the following version:<br/>
+					openjdk version "1.8.0_212"<br/>
+					OpenJDK Runtime Environment (build 1.8.0_212-8u212-b03-0ubuntu1.16.04.1-b03)<br/>
+					OpenJDK 64-Bit Server VM (build 25.212-b03, mixed mode)
+				</li>
+				<li>
+					Download the <a class="page-link" href="https://nexus.opendaylight.org/content/repositories/public/org/opendaylight/integration/distribution-karaf/0.6.3-Carbon/distribution-karaf-0.6.3-Carbon.tar.gz" title="OpenDayLight Carbon 0.6.3" target="_new">OpenDayLight Carbon 0.6.3</a> compressed file
+				</li>
+				<li>
+					Uncompress the file
+					<pre>tar zxvf distribution-karaf-0.6.3-Carbon.tar.gz</pre>
+				</li>
+				<li>
+					Move to the binaries folder and run the Karaf subsystem binary
+					<pre>cd bin
+./start</pre>
+				</li>
+				<li>
+					Access the Karaf console. Since OpenDaylight does not support the control of layer 2 devices out of the box, multiple other features are required to enable this functionality. This will be configured controller
+					<pre>ssh karaf@127.0.0.1 -p 8101 # use "karaf" as password
+feature:install odl-mdsal-models odl-aaa-shiro odl-akka-scala-2.11 odl-akkasystem-2.4 odl-akka-clustering-2.4 odl-akka-leveldb-0.7 odl-akkapersistence-2.4 odl-netty odl-netty-4 odl-guava-18 odl-lmax-3 odl-triemap0.2 odl-restconf-all odl-restconf odl-restconf-noauth odl-mdsal-apidocs odlyangtools-yang-data odl-yangtools-common odl-yangtools-yang-parser odl-aaaapi odl-aaa-authn odl-aaa-encryption-service odl-aaa-cert odlopenflowplugin-southbound-he odl-openflowplugin-nsf-model-he odlopenflowplugin-app-lldp-speaker-he odl-mdsal-dom odl-mdsal-common odl-mdsaldom-api odl-mdsal-dom-broker odl-mdsal-binding-base odl-mdsal-bindingruntime odl-mdsal-binding-api odl-mdsal-binding-dom-adapter odl-mdsal-eoscommon odl-mdsal-eos-dom odl-mdsal-eos-binding odl-mdsal-singleton-common odl-mdsal-singleton-dom standard config region package http war kar ssh management odl-openflowplugin-flow-services-ui odl-openflowplugin-flowservices-rest odl-openflowplugin-flow-services odl-openflowplugin-southbound odl-openflowplugin-nsf-model odl-openflowplugin-app-config-pusher odlopenflowplugin-app-topology odl-openflowplugin-app-forwardingrules-manager odl-l2switch-switch odl-l2switch-switch-rest odl-l2switch-switch-ui odll2switch-hosttracker odl-l2switch-addresstracker odl-l2switch-arphandler odl-l2switch-loopremover odl-l2switch-packethandler odl-dluxappsapplications odl-dluxapps-nodes odl-dluxapps-topology odl-dluxapps-yangui odl-dluxapps-yangman odl-dluxapps-yangvisualizer pax-jetty pax-http paxhttp-whiteboard pax-war odl-config-persister odl-config-startup odl-dluxcore odl-config-netty odl-config-api odl-config-netty-config-api odl-configcore odl-config-manager odl-openflowjava-protocol odl-mdsal-all odl-mdsalcommon odl-mdsal-broker-local odl-toaster odl-mdsal-xsql odl-mdsalclustering-commons odl-mdsal-distributed-datastore odl-mdsal-remoterpcconnector odl-mdsal-broker</pre>
+				</li>
+				<li>
+					Setup the network configuration
+					<ul>
+						<li>
+							The VM where ODL runs must be in the same network as the SDN-enabled switch. For instance, the ODL VM used in the project runs on a server that is connected to the switch via an intermediate switch that is tagged with an appropriate VLAN. Other possible setups would be to physically connect one interface of such server to the switch
+						</li>
+						<li>
+							The setup of the interfaces is as follows:
+							<ul>
+								<li>
+									The server has a bridge that links i) the interface connected to the switch with ii) the interface assigned to the VLAN in use for the switch (as well as external connectivity)
+								</li>
+								<li>
+									The ODL VM has one interface connected to a virtual network (e.g., 10.102.20.0/24)
+								</li>
+							</ul>
+							In summary, the IP of the bridge in the server (e.g., 10.102.20.3) and the IP of the interface of the ODL VM (e.g., 10.102.20.9) must be in the same range.
+					</ul>
+				</li>
+				<li>
+					Enable TLS encryption of the OpenFlow traffic. To do so, a CA must be created.<br/>
+					The intermediate pair must be skipped if the switch does not support chained certificates. The leaf certificates are signed directly with the root certificate by using the “policy_loose” preset.<br/><br/>
+
+					On the switch, commands similar to the following ones (for HP Aruba 3800) must be issued
+					<pre>config term
+crypto pki ta-profile <CAProfile>
+copy tftp ta-certificate <CAProfile> <tftp server IP address> <certificate file>
+crypto pki identity-profile SwitchIdentity subject <name/switch serial number>
+crypto pki create-csr certificate-name <certName> ta-profile <CAProfile>
+usage openflow</pre>
+					This will generate a Certificate Signing Request (CSR) in the terminal. The corresponding certificate, using the “usr_cert“ preset, is created and then installed with the following command:
+					<pre>crypto pki install-signed-certificate</pre><br/>
+
+					For ODL, a certificate must first be generated by using the "server_cert" preset
+					<pre>sudo openssl pkcs12 -export -in <ODLCert.pem> -inkey <ODLPrivkey.pem> -out ctl.p12 -name <odlserver></pre>
+					The export password must be set to "opendaylight" (otherwise the ODL configuration shall be changed according to the password of choice). Note that the following commands use this default password.<br/>
+					Then, the certificate must be imported to the keystore
+					<pre>keytool -importkeystore -deststorepass opendaylight -destkeypass opendaylight -destkeystore ctl.jks -srckeystore ctl.p12 -srcstoretype PKCS12 -srcstorepass opendaylight -alias odlserver</pre>
+					Also, the switch certificate must be imported into the truststore:
+					<pre>keytool -importcert -file SwitchCert.pem -keystore truststore.jks -storepass opendaylight</pre><br/>
+
+					Then the Java Key Store (JKS files: ctl.jks and truststore.jks) files are copied into the ODL folder “./configuration/ssl”<br/>
+
+					Finally, TLS is enabled in the OpenFlow connection via the following configuration (in file "/etc/opendaylight/datastore/initial/config/default-openflowconnection-config.xml")
+					<pre>&lt;transport-protocol&gt;TLS&lt;/transport-protocol&gt;<br/>&lt;tls&gt;<br/>   &lt;keystore&gt;configuration/ssl/ctl.jks&lt;/keystore&gt;<br/>   &lt;keystore-type&gt;JKS&lt;/keystore-type&gt;<br/>   &lt;keystore-path-type&gt;PATH&lt;/keystore-path-type&gt;<br/>   &lt;keystore-password&gt;opendaylight&lt;/keystore-password&gt;<br/>   &lt;truststore&gt;configuration/ssl/truststore.jks&lt;/truststore&gt;<br/>   &lt;truststore-type&gt;JKS&lt;/truststore-type&gt;<br/>   &lt;truststore-path-type&gt;PATH&lt;/truststore-path-type&gt;<br/>   &lt;truststore-password&gt;opendaylight&lt;/truststore-password&gt;<br/>   &lt;certificate-password&gt;opendaylight&lt;/certificate-password&gt;<br/>&lt;/tls&gt;</pre>
+			 </li>
+		 </ol>
 
 	</div>
 </div>
