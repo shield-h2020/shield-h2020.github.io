@@ -28,6 +28,8 @@ github_username: shield-h2020
 markdown: kramdown
 theme: minima
 
+google_analytics_id: UA-141029644-1
+
 sass:
   style: :compressed
 
