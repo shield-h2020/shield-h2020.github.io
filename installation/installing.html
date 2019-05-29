@@ -69,6 +69,7 @@ layout: page
 			</ul>
 		</p>
 
+		<a name="vnsf-ecosystem"></a>
 		<h2>vNSF Ecosystem</h2>
 
 		<a name="vnsf-store"></a><br/><br/>
@@ -97,9 +98,6 @@ sudo pip install docker-compose</pre>
 					<pre>cd docker && ./run.sh --environment .env.production --verbose</pre>
 					Then run the following to create the needed persistence volume:
 					<pre>docker exec docker_store-persistence_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --environment /usr/share/dev/store/docker/.env.production"</pre>
-				</li>
-				<li>
-					Access the component via cURL calls. Point to the address "http://$host_ip:5050" (the IP of the node where the component runs).
 				</li>
 				<li>
 					When you no longer wish to use the component, you may stop its containers:
@@ -307,9 +305,6 @@ admin_password = adminpass # password for admin user in db</pre>
 					Initially this will create both the volumes for the vNSFO API and the DB. In subsequent runs, the DB volume will be retained and re-used from disk
 				</li>
 				<li>
-					Access the component via your browser or via cURL calls. Point to the address "(https_enabled?https:http)://$host:$port" (values defined in "api.conf"). The reference documentation for the REST API calls is defined there
-				</li>
-				<li>
 					When you no longer wish to use the component, you may stop its containers:
 					<pre>./teardown.sh</pre>
 					And also prune the system for unused resources:
@@ -318,6 +313,7 @@ admin_password = adminpass # password for admin user in db</pre>
 			</ol>
 		</p>
 
+		<a name="trusted-infrastructure"></a>
 		<h2>Trusted Infrastructure</h2>
 
 		<a name="trust-monitor"></a><br/><br/>
@@ -360,38 +356,6 @@ CASSANDRA_PORT = '9160' # default port where Cassandra runs</pre>
 					<pre>docker-compose up --build</pre>
 				</li>
 				<li>
-					Access the component via your browser or via cURL calls. Point to the address "http://$host_ip:8443" (the IP of the node where the component runs).
-					The following list of endpoints are available:
-					<ul>
-						<li>
-							Status information on the application: GET on https://$host_ip:443/status/
-						</li>
-						<li>
-							Registration of a node: https://$host_ip:443/register_node/
-							<ul>
-								<li>
-									POST with body: '{"distribution": "<distro (e.g. CentOS7/HPE)>", "hostName": "<host name>",
-	"driver":"OAT/OpenCIT/HPESwitch", "address": "xxx.xxx.xxx.xxx"}'
-								</li>
-								<li>
-									DELETE with body: '{"hostName": "<node-to-unregister>"}'
-								</li>
-							</ul>
-						</li>
-						<li>
-							Attestation of a node: https://$host_ip:443/attest_node/
-							<ul>
-								<li>
-									GET to https://$host_ip:443/nfvi_pop_attestation_info?node_id=<id> or to https://$host_ip:443/nfvi_attestation_info/
-								</li>
-								<li>
-									POST with body: '{"node_list" : [{"node" : "<host name>"}]}'
-								</li>
-							</ul>
-						</li>
-					</ul>
-				</li>
-				<li>
 					When you no longer wish to use the component, you may stop its containers:
 					<pre>docker-compose rm</pre>
 					And also prune the system for unused resources:
@@ -400,6 +364,7 @@ CASSANDRA_PORT = '9160' # default port where Cassandra runs</pre>
 			</ol>
 		</p>
 
+		<a name="big-data-analytics"></a>
 		<h2>Big Data Analytics</h2>
 
 		<a name="security-dashboard"></a><br/><br/>
@@ -428,9 +393,6 @@ sudo pip install docker-compose</pre>
 					<pre>cd docker && ./run.sh --environment .env.production --verbose</pre>
 					Then run the following to create the needed persistence volume:
 					<pre>docker exec -it docker_dashboard-persistence_1 bash -c "/usr/share/dev/dashboard/docker/setup-datastore.sh --environment .env.production"</pre>
-				</li>
-				<li>
-					Access the component via your browser or via cURL calls. Point to the address "http://$host_ip/#/shield/home/dashboard" (the IP of the node where the component runs).
 				</li>
 				<li>
 					When you no longer wish to use the component, you may stop its containers:
@@ -562,6 +524,7 @@ rm -r venv/</pre>
 			</ol>
 		</p>
 
+		<a name="infrastructure"></a>
 		<h2>Infrastructure</h2>
 
 		<a name="big-data-cluster"></a><br/><br/>

@@ -3,4 +3,283 @@ title: User guide
 layout: page
 ---
 
-...
+<div class="row">
+	<div class="col-xs-12 col-md-12">
+
+		<p class="text-justify">
+			Once the SHIELD components are <a class="page-link" href="{{ 'installing.html' | prepend: 'installation/' }}" title="SHIELD installation guide">installed and configured</a>, the components are ready to use and/or to access. This guide provides pointers on how to access each component.
+		</p>
+
+		<p class="text-justify">
+			The following components are described:
+			<ul>
+				<li>
+					vNSF Ecosystem
+					<ul>
+						<li>
+							<a href="#vnsf-store">vNSF Store</a>
+						</li>
+						<li>
+							<a href="#vnsf-orchestrator">vNSF Orchestrator</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Trusted Infrastructure
+					<ul>
+						<li>
+							<a href="#trust-monitor">Trust Monitor</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Big Data Analytics
+					<ul>
+						<li>
+							<a href="#security-dashboard">Security Dashboard</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Infrastructure
+					<ul>
+						<li>
+							<a href="#big-data-cluster">Big Data cluster</a>
+						</li>
+						<li>
+							<a href="#vnf-vim">VIM for the VNFs</a>
+						</li>
+						<li>
+							<a href="#nfvo">NFVO</a>
+						</li>
+						<li>
+							<a href="#sdn-controller">SDN controller</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</p>
+
+		<a name="vnsf-ecosystem"></a>
+		<h2>vNSF Ecosystem</h2>
+
+		<a name="vnsf-store"></a><br/><br/>
+		<h3>vNSF Store</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					The component is running at "http://$host_ip:5050" (where "$host_ip" is the IP of the node where the component runs)
+				</li>
+        <li>
+          There is no GUI served. REST-enabled clients (e.g., cURL) are the expected way to use
+        </li>
+        <li>
+          The list of available REST endpoints is <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}/blob/master/swagger.json" title="REST definition" target="_new">defined in Swagger</a>
+        </li>
+			</ol>
+		</p>
+
+		<a name="vnsf-orchestrator"></a><br/><br/>
+		<h3>vNSF Orchestrator</h3>
+		<p class="text-justify">
+			<ol>
+        <li>
+					The component will typically run at "https://$host_ip:8443" (where "$host_ip" is the IP of the node where the component runs, and where HTTP/HTTPS and the port are configurable).
+				</li>
+        <li>
+          There is no GUI served. REST-enabled clients (e.g., cURL) are the expected way to use.<br/>
+          Swagger documentation is shown directly when accessing the endpoint via a browser
+        </li>
+        <li>
+          The list of available REST endpoints is <a class="page-link" href="{{ '/trust-monitor' | prepend: site.githuburl }}/blob/master/src/server/endpoints.yaml" title="REST definition" target="_new">defined in Swagger</a>
+        </li>
+			</ol>
+		</p>
+
+		<a name="trusted-infrastructure"></a>
+		<h2>Trusted Infrastructure</h2>
+
+		<a name="trust-monitor"></a><br/><br/>
+    <h3>Trust Monitor</h3>
+		<p class="text-justify">
+      <ol>
+        <li>
+					The component runs at "https://$host_ip:443" (where "$host_ip" is the IP of the node where the component runs).
+				</li>
+        <li>
+          There is no GUI served. REST-enabled clients (e.g., cURL) are the expected way to use.<br/>
+          Django REST interface is shown when accessing the endpoint via a browser
+        </li>
+        <li>
+          The list of available REST endpoints is <a class="page-link" href="{{ '/trust-monitor' | prepend: site.githuburl }}/blob/master/trustMonitor/trust_monitor/urls.py" title="REST definition" target="_new">defined in Django</a> and below:
+          <ul>
+            <li>
+              Status information on the application: GET on https://$host_ip:443/status/
+            </li>
+            <li>
+              Registration of a node: https://$host_ip:443/register_node/
+              <ul>
+                <li>
+                  POST with body: '{"distribution": "<distro (e.g. CentOS7/HPE)>", "hostName": "<host name>",
+  "driver":"OAT/OpenCIT/HPESwitch", "address": "xxx.xxx.xxx.xxx"}'
+                </li>
+                <li>
+                  DELETE with body: '{"hostName": "<node-to-unregister>"}'
+                </li>
+              </ul>
+            </li>
+            <li>
+              Attestation of a node: https://$host_ip:443/attest_node/
+              <ul>
+                <li>
+                  GET to https://$host_ip:443/nfvi_pop_attestation_info?node_id=<id> or to https://$host_ip:443/nfvi_attestation_info/
+                </li>
+                <li>
+                  POST with body: '{"node_list" : [{"node" : "<host name>"}]}'
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+			</ol>
+		</p>
+
+		<a name="big-data-analytics"></a>
+		<h2>Big Data Analytics</h2>
+
+		<a name="security-dashboard"></a><br/><br/>
+		<h3>Security Dashboard</h3>
+		<p class="text-justify">
+			<ol>
+        <li>
+					The component runs at "http://$host_ip/#/shield/home/dashboard" (where "$host_ip" is the IP of the node where the component runs). Read more on the <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}/blob/master/docs/recommendations.md" title="Dashboard design" target="_new">Dashboard design</a>
+				</li>
+        <li>
+          A GUI is served. Browsers are the expected way to use
+        </li>
+        <li>
+          The GUI operates with multiple users. Below you can find a reference:
+          <ul>
+            <li>
+              <strong>SHIELD Administrator</strong>: performs all the Operations & Maintenance (O&M) tasks available for a SHIELD instance, having the highest level of privileges granted to a user. It is the user that can create SecaaS clients and onboard NSs.
+              <pre>username: admin
+password: adminpass
+client: default</pre>
+            </li>
+            <li>
+              <strong>SecaaS  Administration</strong>: performs  all  the  O&M  tasks  associated  with  a  specific  SecaaS client, having the highest level of privileges granted to a user tasked with managing a SecaaS client. Can select the NSs to use for the client.
+              <pre>username: shield.client.admin
+password: pass
+client: shield-uw</pre>
+            </li>
+            <li>
+              <strong>Developer</strong>: can submit vNSFs for onboarding into the platform. It is also the role with the least privileges granted in the entire platform.
+              <pre>username: shield.developer
+password: pass
+client: shield-developers</pre>
+            </li>
+          </ul>
+        </li>
+			</ol>
+		</p>
+
+		<a name="infrastructure"></a>
+		<h2>Infrastructure</h2>
+
+		<a name="big-data-cluster"></a><br/><br/>
+		<h3>Big Data cluster</h3>
+    <p class="text-justify">
+			<ol>
+        <li>
+					The tool runs at "http://$host_ip:7180/cmf/services/10/instances" (where "$host_ip" is the IP of the node where the component runs)
+				</li>
+        <li>
+          A GUI is served. Browsers are the expected way to use
+        </li>
+			</ol>
+		</p>
+
+		<a name="vnf-vim"></a><br/><br/>
+		<h3>VIM for the VNFs</h3>
+
+		<h4>OpenStack Ocata</h4>
+    <p class="text-justify">
+			<ol>
+        <li>
+          The tool will typically run at "https://$host_ip/auth/login/?next=" (where "$host_ip" is the IP of the node where the tool runs, and where HTTP/HTTPS is configurable)
+				</li>
+        <li>
+          A GUI is served. Browsers are the expected way to use
+        </li>
+			</ol>
+		</p>
+
+		<h4>vim-emu</h4>
+		<p class="text-justify">
+      <ol>
+        <li>
+          The tool connects Docker with some emulated OpenStack APIs, so it is reachable by the typical Docker commands (e.g., "docker ps -a")
+				</li>
+        <li>
+          No GUI is served. CLI is the expected way to use
+        </li>
+			</ol>
+		</p>
+
+		<a name="nfvo"></a><br/><br/>
+		<h3>NFVO</h3>
+
+		<h4>OSM release FIVE</h4>
+		<p class="text-justify">
+      <ol>
+        <li>
+          The tool runs at "http://$host_ip/auth/?next=/" (where "$host_ip" is the IP of the node where the tool runs)
+				</li>
+        <li>
+          A GUI is served. Browsers, CLI and REST-enabled clients (e.g., cURL) are the expected way to use
+        </li>
+        <li>
+          The GUI operates with multiple users. The default one is:
+          <pre>username: admin
+password: admin</pre>
+        </li>
+			</ol>
+		</p>
+
+		<a name="sdn-controller"></a><br/><br/>
+		<h3>SDN controller</h3>
+    <p class="text-justify">
+      <ol>
+        <li>
+          The tool runs at "http://$host_ip:8181/index.html#/login" (where "$host_ip" is the IP of the node where the tool runs)
+				</li>
+        <li>
+          A GUI is served. Browsers, CLI (via Karaf) and REST-enabled clients (e.g., cURL) are the expected way to use
+        </li>
+        <li>
+          The list of available REST endpoints is defined in "http://$host_ip:8181/apidoc/explorer/index.html". Some examples below:
+          <ul>
+            <li>
+              Get flows from the operational endpoint:
+              <pre>curl -v --user "admin":"admin" -H "Accept:application/json" http://$host_ip:8181/restconf/operational/opendaylight-inventory:nodes/node/openflow:112591078470795328/flow-node-inventory:table/0</pre>
+            </li>
+            <li>
+              Get flows from the config endpoint:
+              <pre>curl -v --user "admin":"admin" -H "Accept:application/json" http://$host_ip:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:112591078470795328/table/0</pre>
+            </li>
+            <li>
+              Push flows to the config endpoint:
+              <pre>curl -v --user "admin":"admin" -H "Accept:application/xml" -H "Content-type: application/xml" -X PUT -d '<flow xmlns="urn:opendaylight:flow:inventory"><id>L2switch-0</id><hard-timeout>0</hard-timeout><idle-timeout>0</idle-timeout><cookie>3098476543630901248</cookie><instructions><instruction><order>0</order><apply-actions><action><order>0</order><output-action><max-length>65535</max-length><output-node-connector>NORMAL</output-node-connector></output-action></action></apply-actions></instruction></instructions><priority>100</priority><flow-statistics xmlns="urn:opendaylight:flow:statistics"><packet-count>0</packet-count><byte-count>0</byte-count><duration><nanosecond>42000000</nanosecond><second>2064</second></duration></flow-statistics><table_id>0</table_id></flow>' http://$host_ip:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:112713206571380736/flow-node-inventory:table/0/flow/L2switch-0</pre>
+            </li>
+          </ul>
+        </li>
+        <li>
+          The GUI operates with a default user:
+          <pre>username: admin
+password: admin</pre>
+        </li>
+			</ol>
+		</p>
+
+	</div>
+</div>
