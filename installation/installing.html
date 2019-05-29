@@ -61,6 +61,9 @@ layout: page
 						<li>
 							<a href="#sdn-controller">SDN controller</a>
 						</li>
+						<li>
+							<a href="#sdn-switch">SDN switch</a>
+						</li>
 					</ul>
 				</li>
 			</ul>
@@ -68,7 +71,7 @@ layout: page
 
 		<h2>vNSF Ecosystem</h2>
 
-		<a name="vnsf-store"></a><br/>
+		<a name="vnsf-store"></a><br/><br/>
 		<h3>vNSF Store</h3>
 		<p class="text-justify">
 			<ol>
@@ -107,7 +110,7 @@ sudo pip install docker-compose</pre>
 			</ol>
 		</p>
 
-		<a name="vnsf-orchestrator"></a><br/>
+		<a name="vnsf-orchestrator"></a><br/><br/>
 		<h3>vNSF Orchestrator</h3>
 		<p class="text-justify">
 			<ol>
@@ -317,7 +320,7 @@ admin_password = adminpass # password for admin user in db</pre>
 
 		<h2>Trusted Infrastructure</h2>
 
-		<a name="trust-monitor"></a><br/>
+		<a name="trust-monitor"></a><br/><br/>
     <h3>Trust Monitor</h3>
 		<p class="text-justify">
 			<ol>
@@ -399,7 +402,7 @@ CASSANDRA_PORT = '9160' # default port where Cassandra runs</pre>
 
 		<h2>Big Data Analytics</h2>
 
-		<a name="security-dashboard"></a><br/>
+		<a name="security-dashboard"></a><br/><br/>
 		<h3>Security Dashboard</h3>
 		<p class="text-justify">
 			<ol>
@@ -438,7 +441,7 @@ sudo pip install docker-compose</pre>
 			</ol>
 		</p>
 
-		<a name="data-acquisition-storage"></a><br/>
+		<a name="data-acquisition-storage"></a><br/><br/>
 		<h3>Data acquisition and storage</h3>
 		<p class="text-justify">
 			<ol>
@@ -457,7 +460,7 @@ sudo pip install docker-compose</pre>
 			</ol>
 		</p>
 
-		<a name="dare-workers"></a><br/>
+		<a name="dare-workers"></a><br/><br/>
 		<h3>DARE Workers</h3>
 
 		<h4>Streaming Worker</h4>
@@ -561,7 +564,7 @@ rm -r venv/</pre>
 
 		<h2>Infrastructure</h2>
 
-		<a name="big-data-cluster"></a><br/>
+		<a name="big-data-cluster"></a><br/><br/>
 		<h3>Big Data cluster</h3>
 		<p class="text-justify">
 			<ol>
@@ -691,13 +694,339 @@ Server			Started		big-shield		Commissioned		Server Default Group</pre>
 			</ol>
 		</p>
 
-		<a name="vnf-vim"></a><br/>
+		<a name="vnf-vim"></a><br/><br/>
 		<h3>VIM for the VNFs</h3>
 		<p class="text-justify">
 			In SHIELD, the VIMs in use are both OpenStack (All-in-One, running on top of Centos 7 - centos-release-7-4.1708.el7.centos.x86_64) and vim-emu (a VIM that supports Docker and offers virtualised APIs for OpenStack)
 		</p>
 
-		<a name="nfvo"></a><br/>
+		<h4>OpenStack Ocata</h4>
+		<p class="text-justify">
+			The OpenStack instance used in the project is the "Ocata" distribution, running on top of CentOS 7.5.1804. It uses OpenStack All-in-One (AiO) to automate the installation and configuration procedure by using Ansible scripts
+			<ul>
+				<li>
+					Install the CentOS operating system and configure it.<br/>
+					The partitions for root (“/”), swap, volumes (“/cinder”) and other OpenStack data (“/openstack”) must be defined first, then its mounting point must be set. For instance:
+					<pre>System
+/dev/md126: "/" RAID1: /dev/sda1 & /dev/sdb1 (130 GiB / 133120 MiB)
+/dev/md127: "swap" RAID1: /dev/sda2 & /dev/sdb2 (9832 MiB)
+
+Data
+/dev/md125: "/cinder" RAID1: /dev/sdc1 & /dev/sdd1 (200 GiB / 204800 MiB)
+/dev/md124: "/openstack" RAID1: /dev/sdc2 & /dev/sdd2 (695 GiB / 711680 MiB)
+
+# A sensible outcome of the "df -h" command is as follows:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md126      130G   14G  117G  11% /
+devtmpfs         63G     0   63G   0% /dev
+tmpfs            63G     0   63G   0% /dev/shm
+tmpfs            63G  2.4G   61G   4% /run
+tmpfs            63G     0   63G   0% /sys/fs/cgroup
+/dev/md124      755M   34M  721M   5% /openstack
+/dev/md125      200G   33M  200G   1% /cinder
+tmpfs            13G     0   13G   0% /run/user/0
+tmpfs            13G     0   13G   0% /run/user/1000</pre>
+					Install dependencies
+					<pre>yum -y install vim net-tools policycoreutils-python ansible atop htop iotop git ntp ntpdate bridge-utils lsof lvm2 openssh-server sudo tcpdump vlan bridge-utils iputils
+yum groupinstall "Development Tools"
+yum upgrade
+yum reboot
+yum install -y git ntp ntpdate openssh-server python-devel sudo '@Development Tools'</pre>
+					Configure the network as you wish to connect to other devices.<br/>
+					<strong>Note</strong>: "eno1" should provide management and Internet access (i.e., have a reachable IP); whilst "eno2" should be connected to the external OpenStack network (“VLAN” and “FLAT” types)
+					<pre>sudo ip address add 10.10.150.52/23 dev eno1
+# gateway: 10.10.150.1
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+vim /etc/sysconfig/network-scripts/ifcfg-eno1
+# Set eno1 with:
+BOOTPROTO=static
+PREFIX=23
+# Restart network
+systemctl restart network
+service network restart</pre>
+					Configure the Network Time Protocol (NTP) in /etc/ntp.conf to synchronize with a suitable time source and start the service
+					<pre>systemctl enable ntpd.service
+systemctl start ntpd.service</pre>
+					Secure your NFVI PoP by hcanging the SSH port (use "semanage" and "fireall-cmd", then restart the "sshd" service), insert SSH keys, do not allow password-based access and do not allow root access, etc<br/>
+					Manually create the bridges
+					<pre>brctl addbr br-mgmt
+brctl addbr br-storage
+# Created by ASIS (should these be added?)
+brctl addbr br-vlan
+brctl addbr br-vxlan</pre>
+				</li>
+				<li>
+					Download the OpenStack Ansible repository for Ocata
+					<pre>git clone -b stable/ocata https://github.com/openstack/openstack-ansible.git /opt/openstack-ansible</pre>
+				</li>
+				<li>
+					Install the OpenStack Ansible playbooks
+					<pre>cd /opt/openstack-ansible/
+scripts/bootstrap-ansible.sh
+</pre>
+				</li>
+				<li>
+					Configure the OpenStack Ansible templates according to your needs. Features like VLAN shall be enabled, bridges must be created in the Operating System (manual creation produces the best results), the definition of the Swift and Nova loopback disks shall take place, as well as other data such as the bridge to link the virtual interfaces of the VMs deployed by OpenStack
+					<pre># Add appropriate kernel modules to the /etc/modules tile to enable VLAN and bond ifaces
+echo "# Load the bonding kernel module at boot" > /etc/modules-load.d/bonding.conf
+echo "bonding" >> /etc/modules-load.d/bonding.conf
+echo "# Load the 8021.q/VLAN kernel module at boot" > /etc/modules-load.d/vlan.conf
+echo "8021q" >> /etc/modules-load.d/vlan.conf
+
+# Copy and edit generic configuration
+cp -Rp /opt/openstack-ansible/etc/openstack_deploy /etc/openstack_deploy/
+cd /etc/openstack_deploy
+cp -p openstack_user_config.yml.example /etc/openstack_deploy/openstack_user_config.yml
+# Define values for network ranges in the following file
+vim openstack_user_config.yml
+
+# Update the following configuration file with values
+vim /opt/openstack-ansible/tests/roles/bootstrap-host/defaults/main.yml
+
+    # Size of the Swift loopback disk in gigabytes (GB).
+    #bootstrap_host_loopback_swift_size: 1024               ## OLD VALUE
+    bootstrap_host_loopback_swift_size: 250                 ## NEW VALUE
+
+    # Size of the Nova loopback disk in gigabytes (GB).
+    #bootstrap_host_loopback_nova_size: 1024                ## OLD VALUE
+    bootstrap_host_loopback_nova_size: 250                  ## NEW VALUE
+
+    # See https://wiki.debian.org/BridgeNetworkConnections for more details.
+    bootstrap_host_bridge_mgmt_ports: none
+    bootstrap_host_bridge_vxlan_ports: none
+    bootstrap_host_bridge_storage_ports: none
+    #bootstrap_host_bridge_vlan_ports: "br-vlan-veth"        ## OLD VALUE
+    bootstrap_host_bridge_vlan_ports: "eno2"                 ## NEW VALUE</pre>
+				</li>
+				<li>Configure the system
+					<pre># Define previous interface (eno2) so that it is attached to VLAN bridge (br-vlan)
+vim /opt/openstack-ansible/tests/roles/bootstrap-host/templates/osa_interfaces.cfg.j2
+
+	(...)
+	auto br-vlan
+	iface br-vlan inet static
+	    bridge_stp off
+	    bridge_waitport 0
+	    bridge_fd 0
+	    address 172.29.248.100
+	    netmask 255.255.252.0
+	    offload-sg off
+	    # Create veth pair, don't bomb if already exists
+	    pre-up ip link add br-vlan-veth type veth peer name eth12 || true
+	    # Set both ends UP
+	    pre-up ip link set br-vlan-veth up
+	    pre-up ip link set eth12 up
+	    # Delete veth pair on DOWN
+	    post-down ip link del br-vlan-veth || true
+	    # bridge_ports br-vlan-veth                                         ## OLD VALUE
+	    ## “eno2” to be used for VLAN-based bridges
+	    bridge_ports br-vlan-veth {{ bootstrap_host_bridge_vlan_ports }}    ## NEW VALUE
+	(...)
+
+# If the above does not work, create the following file and make it executable
+vim /etc/sysconfig/network-scripts/ifup-post-veth-br-vlan-2-eno2
+
+	#!/usr/bin/env bash
+
+	if [ "${DEVICE}" == "br-vlan" ]; then
+	    # Attach eno2 to the bridge
+	    brctl addif br-vlan eno2 || true
+	fi
+
+chmod +x /etc/sysconfig/network-scripts/ifup-post-veth-br-vlan-2-eno2
+
+Then, set "eno2" network interface to be set-up in UP mode along with "eno1" (see here: http://xmodulo.com/how-to-run-startup-script-automatically-after-network-interface-is-up-on-centos.html)
+
+# Create the file with the following content and make it executable
+vim /etc/sysconfig/network-scripts/ifup-post-eno1
+
+	#!/usr/bin/env bash
+
+	if [ "${DEVICE}" == "eno1" ]; then
+	  if [ "True" == "True" ]; then
+	    ip link set eno2 up
+	  fi
+	fi
+
+chmod +x /etc/sysconfig/network-scripts/ifup-post-eno1
+
+# Call it from the automatic network script
+vim /etc/sysconfig/network-scripts/ifup-post
+
+	(...)
+	. /etc/sysconfig/network-scripts/ifup-post-eno1           ## NEW VALUE
+	(... Other similar ifup-post-${eth} calls ...)
+	exit 0
+
+# Override the wheel's version in the "repo" container (otherwise the Python wheels may fail)
+vim /etc/openstack_deploy/user_variables.yml
+
+	# Use a newer version of libvirt-python to avoid issues in repo
+	# Example: https://bugs.launchpad.net/networking-midonet/+bug/1730314
+	repo_build_upper_constraints_overrides:
+	 - "libvirt-python==4.0.0"
+	 - "libvirt==4.0.0"</pre>
+				</li>
+				<li>
+					Finally, run the OpenStack bootstrap script, verify that the environment is according to the configuration defined before running such script and run the whole setup via its specific playbook
+					<pre>cd /opt/openstack-ansible/
+./scripts/bootstrap-aio.sh</pre>
+					All Ansible tasks should be OK. Verify the configuration of the system at this point. For instance, the bridges should be more or less as follows (though "lxcbr0" may not be there)
+					<pre>brctl show
+bridge name     bridge id               STP enabled     interfaces
+br-mgmt         8000.000000000000       no
+br-storage      8000.000000000000       no
+br-vlan         8000.96c558969050       no              br-vlan-veth
+br-vxlan        8000.000000000000       no
+lxcbr0          8000.000000000000       no</pre>
+				</li>
+				<li>
+					Get the Keystone password to be able to access (Horizon or RC file):
+					<pre>cat /etc/openstack_deploy/user_secrets.yml | grep "keystone_auth_admin_password"
+keystone_auth_admin_password: ***</pre>
+				</li>
+				<li>
+					Run the whole installation
+					<pre>cd /opt/openstack-ansible/playbooks/
+openstack-ansible setup-everything.yml</pre>
+					Wait for it to end and check the "Play recap" to verify that all the playbooks and tasks did run successfully
+				</li>
+			</ul>
+			After the deployment, the OpenStack server must be running a total of 23 LXC containers, each with its own specific service and have enabled different bridges for the management, storage, connectivity (VLAN, VxLAN and/or others, as defined in the previous configuration step). In our setup, this is linked to the SDN switch and to another switch, which is connected to a router for Internet access. Partners accessing the infrastructure are to given access via their OpenVPN client and log-in with their given credentials<br/>
+			The system should present the following status as well:
+			<pre># Partitions
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md126      130G   26G  105G  20% /
+devtmpfs         63G     0   63G   0% /dev
+tmpfs            63G     0   63G   0% /dev/shm
+tmpfs            63G  2.5G   61G   4% /run
+tmpfs            63G     0   63G   0% /sys/fs/cgroup
+/dev/md124      755M  754M  212K 100% /openstack
+/dev/md125      200G   33M  200G   1% /cinder
+tmpfs            13G     0   13G   0% /run/user/0
+tmpfs            13G     0   13G   0% /run/user/1000
+/dev/loop1      246G   61M  234G   1% /var/lib/nova/instances
+/dev/loop2      250G   33M  250G   1% /srv/swift1.img
+/dev/loop3      250G   33M  250G   1% /srv/swift2.img
+/dev/loop4      250G   33M  250G   1% /srv/swift3.img
+
+# Bridges and interfaces
+$ brctl show
+bridge name     bridge id               STP enabled     interfaces
+br-mgmt         8000.fe2e686e7080       no              01c95cb6_eno1
+                                                        0cfb9ab5_eno1
+                                                        0eb6e266_eno1
+                                                        11229f9b_eth1
+                                                        1ed01d5d_eno1
+                                                        1ede6a57_eno1
+                                                        1fa77522_eno1
+                                                        206b8dea_eno1
+                                                        296dffbc_eno1
+                                                        2e82cc87_eno1
+                                                        4a124a3f_eno1
+                                                        5e4dd83e_eno1
+                                                        73b26a6f_eno1
+                                                        82787a2c_eno1
+                                                        9653749e_eno1
+                                                        9c40ab85_eno1
+                                                        9c90639f_eno1
+                                                        b78dc1c8_eno1
+                                                        be28270f_eno1
+                                                        cbfc9b1f_eno1
+                                                        df4c9e53_eth1
+                                                        f9ef960b_eno1
+                                                        faf74974_eno1
+br-storage      8000.fe4b479aa98e       no              11229f9b_eth2
+                                                        2e82cc87_eno2
+                                                        b78dc1c8_eno2
+br-vlan         8000.96c558969050       no              br-vlan-veth
+                                                        f9ef960b_eno11
+                                                        f9ef960b_eno12
+                                                        f9ef960b_eth11
+                                                        f9ef960b_eth12
+br-vxlan        8000.fe94bf4e3e2e       no              f9ef960b_eno10
+lxcbr0          8000.fe07f389e9a2       no              01c95cb6_eth0
+                                                        0cfb9ab5_eth0
+                                                        0eb6e266_eth0
+                                                        11229f9b_eth0
+                                                        1ed01d5d_eth0
+                                                        1ede6a57_eth0
+                                                        1fa77522_eth0
+                                                        206b8dea_eth0
+                                                        296dffbc_eth0
+                                                        2e82cc87_eth0
+                                                        4a124a3f_eth0
+                                                        5e4dd83e_eth0
+                                                        73b26a6f_eth0
+                                                        82787a2c_eth0
+                                                        9653749e_eth0
+                                                        9c40ab85_eth0
+                                                        9c90639f_eth0
+                                                        b78dc1c8_eth0
+                                                        be28270f_eth0
+                                                        cbfc9b1f_eth0
+                                                        df4c9e53_eth0
+                                                        f9ef960b_eth0
+                                                        faf74974_eth0
+
+# Running containers and usage
+
+# lxc-ls
+aio1_cinder_api_container-b78dc1c8          aio1_cinder_scheduler_container-5e4dd83e    aio1_designate_container-df4c9e53
+aio1_galera_container-73b26a6f              aio1_glance_container-2e82cc87              aio1_heat_apis_container-296dffbc
+aio1_heat_engine_container-01c95cb6         aio1_horizon_container-0cfb9ab5             aio1_keystone_container-be28270f
+aio1_memcached_container-82787a2c           aio1_neutron_agents_container-f9ef960b      aio1_neutron_server_container-1fa77522
+aio1_nova_api_metadata_container-206b8dea   aio1_nova_api_os_compute_container-faf74974 aio1_nova_api_placement_container-cbfc9b1f
+aio1_nova_conductor_container-9c90639f      aio1_nova_console_container-4a124a3f        aio1_nova_scheduler_container-1ede6a57
+aio1_rabbit_mq_container-9653749e           aio1_repo_container-9c40ab85                aio1_rsyslog_container-1ed01d5d
+aio1_swift_proxy_container-11229f9b         aio1_utility_container-0eb6e266
+
+# lxc-top
+Container                   CPU          CPU          CPU          BlkIO        Mem
+Name                       Used          Sys         User          Total       Used
+aio1_cinder_api_co         2.97         1.43         1.45       4.00 KiB  25.14 MiB
+aio1_cinder_schedu         2.72         1.28         1.34       4.00 KiB  25.16 MiB
+aio1_designate_con         2.90         1.34         1.45       4.00 KiB  25.17 MiB
+aio1_galera_contai         3.03         1.51         1.44       4.00 KiB  25.07 MiB
+aio1_glance_contai         3.38         1.71         1.57       4.00 KiB  25.19 MiB
+aio1_heat_apis_con         3.09         1.56         1.45       4.00 KiB  25.07 MiB
+aio1_heat_engine_c         2.82         1.34         1.40       4.00 KiB  25.18 MiB
+aio1_horizon_conta         3.09         1.52         1.49       4.00 KiB  24.96 MiB
+aio1_keystone_cont         2.95         1.44         1.41       4.00 KiB  25.03 MiB
+aio1_memcached_con         2.85         1.37         1.39       4.00 KiB  25.18 MiB
+aio1_neutron_agent         3.81         1.82         1.89       4.00 KiB  27.04 MiB
+aio1_neutron_serve         2.93         1.44         1.40       4.00 KiB  25.08 MiB
+aio1_nova_api_meta         2.95         1.46         1.41       4.00 KiB  25.24 MiB
+aio1_nova_api_os_c         2.95         1.49         1.37       4.00 KiB  25.33 MiB
+aio1_nova_api_plac         3.03         1.51         1.44        0.00     25.06 MiB
+aio1_nova_conducto         2.83         1.35         1.41        0.00     27.11 MiB
+aio1_nova_console_         2.85         1.39         1.39       4.00 KiB  25.00 MiB
+aio1_nova_schedule         2.86         1.37         1.40       4.00 KiB  25.08 MiB
+aio1_rabbit_mq_con         3.24         1.68         1.46       4.00 KiB  25.06 MiB
+aio1_repo_containe       273.26        51.84       219.80     148.84 MiB 832.54 MiB
+aio1_rsyslog_conta         2.92         1.35         1.50       4.00 KiB  25.20 MiB
+aio1_swift_proxy_c         3.08         1.46         1.52       4.00 KiB  25.21 MiB
+aio1_utility_conta         3.13         1.55         1.50       4.00 KiB  25.07 MiB
+TOTAL 23 of 23           339.65        84.21       251.88     148.92 MiB   1.35 GiB</pre>
+		</p>
+
+		<h4>vim-emu</h4>
+		<p class="text-justify">
+			The VIM-emulator instance for testing the container-based Network Services does run on a single host machine equipped with CentOS Linux 7.5.1804 and Trusted Platform Module (TPM) version 1.2 (the latter being needed for proper attestation by the Trust Monitor).<br/>
+			The host runs kernel 4.4.19 with a modified version of the Integrity Measurement Architecture (IMA) module to support container attestation. It also runs an instance of the OpenAttestation (OAT) HostAgent software for measuring the platform trust along with containers’ individual  trust
+			<ul>
+				<li>
+					Install the dependencies: <a class="page-link" href="https://docs.docker.com/install/linux/docker-ce/centos/" title="Docker Container engine 19.03.0-dev" target="_new">Docker Container engine 19.03.0-dev</a>
+				</li>
+				<li>
+					Install the <a class="page-link" href="https://osm.etsi.org/wikipub/index.php/VIM_emulator" title="VIM-emulator" target="_new">VIM-emulator</a>, which is available from the OSM wiki and muset be adapted to support the CentOS distribution
+				</li>
+			</ul>
+		</p>
+
+		<a name="nfvo"></a><br/><br/>
 		<h3>NFVO</h3>
 		<p class="text-justify">
 			In SHIELD, the NFVO of choice is OSM. The supported releases are TWO, FOUR, FIVE.
@@ -717,10 +1046,13 @@ Server			Started		big-shield		Commissioned		Server Default Group</pre>
 				<li>
 					Configure OSM by defining the VIM(s) with the following values: "<em>name, type=OpenStack, vim url (endpoint for the Openstack Identity service), vim username, vim password, tenant/project name, vim network name=provider</em>"
 				</li>
+				<li>
+					Onboard the different vNSF and NS packages. Note that in OSM the vNSF package must be onboarded first (as the NS package refers to it in its NSD)
+				</li>
 			</ol>
 		</p>
 
-		<a name="sdn-controller"></a><br/>
+		<a name="sdn-controller"></a><br/><br/>
 		<h3>SDN controller</h3>
 		<p class="text-justify">
 			In SHIELD, the SDN controller used in conjuction with the vNSF Orchestrator (specifically with the vNSFO API) and the Trust Monitor is OpenDayLight in its version "Carbon 0.6.3". The controller enables the control of the SDN switch and allows to dynamically manage its network flow rules.
@@ -798,6 +1130,57 @@ usage openflow</pre>
 					<pre>&lt;transport-protocol&gt;TLS&lt;/transport-protocol&gt;<br/>&lt;tls&gt;<br/>   &lt;keystore&gt;configuration/ssl/ctl.jks&lt;/keystore&gt;<br/>   &lt;keystore-type&gt;JKS&lt;/keystore-type&gt;<br/>   &lt;keystore-path-type&gt;PATH&lt;/keystore-path-type&gt;<br/>   &lt;keystore-password&gt;opendaylight&lt;/keystore-password&gt;<br/>   &lt;truststore&gt;configuration/ssl/truststore.jks&lt;/truststore&gt;<br/>   &lt;truststore-type&gt;JKS&lt;/truststore-type&gt;<br/>   &lt;truststore-path-type&gt;PATH&lt;/truststore-path-type&gt;<br/>   &lt;truststore-password&gt;opendaylight&lt;/truststore-password&gt;<br/>   &lt;certificate-password&gt;opendaylight&lt;/certificate-password&gt;<br/>&lt;/tls&gt;</pre>
 			 </li>
 		 </ol>
+	 </p>
+
+	 <a name="sdn-switch"></a><br/><br/>
+	 <h3>SDN switch</h3>
+	 <p class="text-justify">
+		 The SDN switch is connected to the SDN controller and must be configured accordingly (for instance, reachable via sharing the same VLAN). Also, the SDN switch should feature a TPM switch that allows to fetch metrics that assess its trustworthy (or not) state.
+	 </p>
+
+	 <p class="text-justify">
+		 <ol>
+			 <li>
+				 Create a VLAN.<br/>
+		 The setup of the switch (here, the HP Aruba 3800) requires its connection to the OpenFlow controller. In order to be managed by the OpenDaylight controller, a dedicated VLAN must also be instantiated: the management VLAN. At least one port must be part of it and configured to
+reach the ODL controller (it is instantiated similarly to the managed network described below). In order to create a managed network, another VLAN is necessary.<br/>
+			To create a VLAN, instantiate an OpenFlow instance and assign ports to it, these commands should be issued on the switch console:
+			<pre>config term
+vlan <VLAN#>
+ untagged <port number or range of port numbers>
+ exit
+exit</pre>
+			At least one port shall be set as untagged for the VLAN, so that it is assigned to the VLAN.<br/>
+</li>
+<li>
+	On the managed network, a virtual OpenFlow instance is defined and configured to connect to the ODL controller. OpenFlow 1.0 must be enabled:
+			<pre>config term
+openflow
+ controller-id <controller_instance_id> ip <odl_vm_ip> controllerinterface vlan <controller_vlan>
+ instance "odl_<infrastructure_name>"
+ version 1.0
+ member vlan <managed_network_vlan>
+ controller-id <controller_instance_id> [secure]
+ flow-location hardware-only
+ enable
+ exit
+ enable
+ exit
+exit</pre>
+			If the ODL instance is secured with TLS, the secure option must be set when configuring the controller ID for the instance.<br/>
+			Following these commands, the general status of the OpenFlow instance can be monitored with show openflow, while the details of the instance can be checked with
+			<pre>show openflow instance <instance_name></pre>
+</li>
+<li>To allow communication between the switch and the Trust Monitor, SNMP has to be enabled. To enable SNMPv3, type
+			<pre>config term
+snmpv3 enable</pre>
+			Then follow the on-screen instructions. Once finished, type:
+			<pre>snmpv3 user <username> auth sha <auth_password> priv aes <priv_password>
+snmpv3 group managerpriv user <username> sec-model ver3</pre>
+			This sets the user passwords and encryption algorithms, and it also assigns the user to the manager/privacy group
+		</li>
+	</ol>
+	 </p>
 
 	</div>
 </div>
