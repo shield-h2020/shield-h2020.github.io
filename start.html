@@ -11,7 +11,7 @@ layout: page
 				<span class="start-steps">Read the basics</span>
 			</p>
 			<p class="start-steps-content">
-				You can check out the <a href="{{ 'architecture.html' | prepend: 'about/' }}">architecture</a> and the <a href="{{ 'features.html' | prepend: 'about/' }}">features</a> provided by the SHIELD platform.
+				You can check out the <a class="page-link" href="{{ 'architecture.html' | prepend: 'about/' }}">architecture</a> and the <a class="page-link" href="{{ 'features.html' | prepend: 'about/' }}">features</a> provided by the SHIELD platform.
 			</p>
 		</p>
 
@@ -30,10 +30,7 @@ layout: page
 			</p>
 			<p class="start-steps-content">
 				<p>
-					You will need to prepare your environment beforehand.
-				</p>
-				<p>
-					For instance, your <strong>NFVI</strong> will require one or more VIM (as supported by OSM; namely OpenStack, VMware vCloud Director, AWS and OpenVIM -- we used OpenStack Ocata), SDN controller (ODL Carbon), NFVO (OSM release FIVE). You will also need to install Apache Spot for the DARE component to run.
+					You will need to prepare your environment beforehand (for instance, the <strong>NFVI</strong>, and particularly OSM, will require one or more VIMs as OpenStack, VMware vCloud Director, AWS and OpenVIM). Some guidelines are provided <a class="page-link" href="{{ 'installing.html#infrastructure' | prepend: 'installation/' }}">here</a>.
 				</p>
 				<p>
 					On a lower level you will also need to configure your hardware (whether it is to install the base Operating System, to install a TPM-based firmware in a switch or perform any configuration on a TPM-enabled server); as well as interconnect it properly to conform your infrastructure or testbed.
@@ -43,25 +40,21 @@ layout: page
 
 		<p class="start-steps text-justify">
 			<p class="start-steps-content">
-				<span class="start-steps">Install each component</span>
+				<span class="start-steps">Install each component and apply configurations</span>
 			</p>
 			<p class="start-steps-content">
-				Go through the README file available in the repository of each component. Look also for information on the <a href="{{ 'installing.html' | prepend: 'installation/' }}">installation guide</a>.
-			</p>
-		</p>
-
-		<p class="start-steps text-justify">
-			<p class="start-steps-content">
-				<span class="start-steps">Apply configurations</span>
-			</p>
-			<p class="start-steps-content">
-				The components previously installed must be configured before these can run. Check out the sample configuration files provided in the repository of each component, copy them into the final configuration file and update the templated values with your own. Again, refer to the installation guide for further details.
+				<p>
+					Go through the README file available in the repository of each component. Look also for information on the <a class="page-link" href="{{ 'installing.html' | prepend: 'installation/' }}">installation guide</a>.
+				</p>
+				<p>
+					The installed components must be configured before these can run. Check out the sample configuration files provided in the repository of each component, copy them into the final configuration file and update the templated values with your own. Again, refer to the installation guide for further details.
+				</p>
 			</p>
 		</p>
 
 		<p class="start-steps text-justify">
 			<p class="start-steps-content">
-				<span class="start-steps">Run the components</span>
+				<span class="start-steps">Run the components and use them</span>
 			</p>
 			<p class="start-steps-content">
 				<p>
@@ -69,6 +62,9 @@ layout: page
 				</p>
 				<p>
 					For instance, you may call a REST endpoint in the vNSFO API to start a workflow that involves several components and assess the final outcome against the expected one.
+				</p>
+				<p>
+					In the end, you may check the <a class="page-link" href="{{ 'user-guide.html' | prepend: 'installation/' }}">user guide</a> to see how to access the components and operate with them.
 				</p>
 			</p>
 		</p>
