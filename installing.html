@@ -1,0 +1,803 @@
+---
+title: Installing
+layout: page
+---
+
+<div class="row">
+	<div class="col-xs-12 col-md-12">
+
+		<p class="text-justify">
+			The SHIELD platform consists of a series of components. Its source code is available in different repositories within the <a class="page-link" href="{{ site.githuburl }}" title="GitHub repository" target="_new">GitHub repository</a>. Each component provides its own README file and may need some third-party tools to be installed, as well as require some previous configuration in order for our software to work.
+		</p>
+
+		<p class="text-justify">
+			The following components are described:
+			<ul>
+				<li>
+					vNSF Ecosystem
+					<ul>
+						<li>
+							<a href="#vnsf-store">vNSF Store</a>
+						</li>
+						<li>
+							<a href="#vnsf-orchestrator">vNSF Orchestrator</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Trusted Infrastructure
+					<ul>
+						<li>
+							<a href="#trust-monitor">Trust Monitor</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Big Data Analytics
+					<ul>
+						<li>
+							<a href="#data-acquisition-storage">Data acquisition and storage</a>
+						</li>
+						<li>
+							<a href="#dare-workers">DARE Workers</a>
+						</li>
+						<li>
+							<a href="#security-dashboard">Security Dashboard</a>
+						</li>
+					</ul>
+				</li>
+				<li>
+					Infrastructure
+					<ul>
+						<li>
+							<a href="#big-data-cluster">Big Data cluster</a>
+						</li>
+						<li>
+							<a href="#vnf-vim">VIM for the VNFs</a>
+						</li>
+						<li>
+							<a href="#nfvo">NFVO</a>
+						</li>
+						<li>
+							<a href="#sdn-controller">SDN controller</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</p>
+
+		<h2>vNSF Ecosystem</h2>
+
+		<a name="vnsf-store"></a><br/>
+		<h3>vNSF Store</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/store' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					First, the python-pip <a class="page-link" href="{{ '/store' | prepend: site.githuburl }}/blob/master/docker/requirements-store.txt" title="requirements" target="_new">requirements</a>: <pre>pip install -r requirements-store.txt</pre>
+					Also install Docker:
+					<pre>sudo apt-get install --no-install-recommends apt-transport-https curl software-properties-common python-pip
+curl -fsSL 'https://sks-keyservers.net/pks/lookup?op=get&search=0xee6d536cf7dc86e2d7d56f59a178ac6c6238f52e' | sudo apt-key add -
+sudo add-apt-repository "deb https://packages.docker.com/1.13/apt/repo/ubuntu-$(lsb_release -cs) main"
+sudo apt-get update
+sudo apt-get -y install docker-engine
+sudo pip install docker-compose</pre>
+				</li>
+				<li>
+					Start the component:
+					<pre>cd docker && ./run.sh --environment .env.production --verbose</pre>
+					Then run the following to create the needed persistence volume:
+					<pre>docker exec docker_store-persistence_1 bash -c "/usr/share/dev/store/docker/setup-datastore.sh --environment /usr/share/dev/store/docker/.env.production"</pre>
+				</li>
+				<li>
+					Access the component via cURL calls. Point to the address "http://$host_ip:5050" (the IP of the node where the component runs).
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>cd docker && ./run.sh --shutdown</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<a name="vnsf-orchestrator"></a><br/>
+		<h3>vNSF Orchestrator</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/nfvo' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					The <a class="page-link" href="{{ '/nfvo' | prepend: site.githuburl }}/blob/master/bin/deploy.sh" title="requirements" target="_new">following script</a> can be used: <pre>cd bin && ./deploy.sh</pre>
+					This script generates the credentials for the server running the vNSFO API and generates a copy of the sample configuration files
+					Also install Docker:
+					<pre>sudo apt-get install python3 python3-pip -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-get update
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get install docker-ce=17.09.1~ce-0~ubuntu
+sudo usermod -G docker $(whoami)
+sudo pip3 install docker-compose==1.17.1</pre>
+				</li>
+				<li>
+					For each configuration folder, adapt with your values of choice. Configurations are available under the "conf" folder
+
+					<dl class="dl-horizontal">
+					  <dt>api.conf</dt>
+					  <dd>
+							Determines the information of the server that runs the vNSFO API.
+							<pre>[general]
+    host = 0.0.0.0 # to serve it publicly or any other specific IP
+    port = 8448 # port where the vNSFO API runs
+    debug = True # enable or disable debug messages in the vNFO API logs (these can be checked via "docker logs -f docker_nfvo_1")
+
+[security]
+    https_enabled = True # enable or disable the vNSFO being served over HTTPS
+    verify_client_cert = False # enable or disable the enforcement to trust the certificate of the client interacting with the vNSFO API</pre>
+						</dt>
+						<dt>attacks.conf</dt>
+					  <dd>
+							Provides the mapping between the attacks identified in the DARE with the NSs instantiated by the vNSFO.
+							<pre>[general]
+    default = l3filter_nsd # name of the NS package that will be instantiated to remediate an attack by default
+		# name of the NS package that will be instantiated to remediate an attack identified by DARE with the name in the left
+    Worm = l3filter_nsd
+    Wannacry = l3filter_nsd
+    DoS = l3filter_nsd
+    TCP flood = l3filter_nsd
+    tcp_flood = l3filter_nsd
+    UDP flood = l3filter_nsd
+    udp_flood = l3filter_nsd
+    Slowloris = l3filter_nsd
+    dns_results = l3filter_nsd
+    DNS tunneling = l3filter_nsd
+    Cryptocurrency Mining = l3filter_nsd</pre>
+						</dd>
+						<dt>db.conf</dt>
+					  <dd>
+							Configuration of the Mongo database.
+							<pre>[general]
+host = nfvo-db # Mongo DB exposed address
+port = 27017 # Mongo DB exposed port
+
+[db]
+name = shield-nfvo # name of the db to insert collections
+user = user # user id for db
+password = user # password for user in db
+auth_source = admin # authSource parameter used by db
+admin_username = admin # admin user id for db
+admin_password = adminpass # password for admin user in db</pre>
+						</dd>
+						<dt>isolation.conf</dt>
+					  <dd>
+							Configuration of the values required for the isolation and termination processes. <strong>Note</strong> that 2 KVM-based instances and 1 Docker-based instance are allowed.
+							<pre>[scripts]
+    path = src/templates/isolation # path to the templates that will be used to perform isolation and termination procedures
+    shutdown = shutdown.sh # default file to execute a node shutdown
+    delflow = delflow.sh # default file to execute a flow removal
+    ifdown = ifdown.sh # default file to execute an interface deactivation
+
+    [keys]
+    default_username = ubuntu # default user name that allows access to the virtual nodes deployed
+    default_key = keys/default.pem # relative path (from the repo source) to the key that should be inserted in the nodes deployed (i.e., via the VIM)
+
+    [commands]
+    default_shutdown = sudo poweroff # default shutdown command to terminate nodes
+
+    [kvm_vim_1]
+    vim_account_id = d4ec6514-4760-47f5-914e-df951ac20dec # UUID in OSM of a specific KVM-based VIM
+    identity_endpoint = https://openstack.shield.yourorganisation:5000/v3 # OpenStack endpoint for the identity service
+    username = shield # username for the OpenStack identity service
+    password = shield # password for the OpenStack identity service
+    project_name = shield # project/tenant name to use in OpenStack
+    domain_name = default # domain name to access OpenStack
+
+    [kvm_vim_2]
+    vim_account_id = 0cc01f33-f66d-47bd-8124-ca7ff2dbfc85 # UUID in OSM of a specific KVM-based VIM
+    identity_endpoint = http://10.102.10.48:5000/v3 # OpenStack endpoint for the identity service
+    username = shield # username for the OpenStack identity service
+    password = shield # password for the OpenStack identity service
+    project_name = shield # project/tenant name to use in OpenStack
+    domain_name = default # domain name to access OpenStack
+
+    [docker_vim]
+    vim_account_id = 260c6bfc-5b52-4341-96a0-72cbd254c662 # UUID in OSM of a specific Docker-based VIM
+    identity_endpoint = http://10.102.10.49:6001/v3.0 # OpenStack-like endpoint for the identity service
+    username = admin # username for the OpenStack-like identity service
+    password = admin # password for the OpenStack-like identity service
+    project_name = admin # project/tenant name to use in OpenStack
+    domain_name = default  # domain name to access OpenStack</pre>
+						</dd>
+						<dt>nfvo.conf</dt>
+					  <dd>
+							Configuration of the NFVO endpoints (for both OSMr2 and OSMr4/OSMr5), as well as credentials and other information.
+							<pre># OSMr2 configuration
+[general]
+    host = 10.102.10.50 # OSMr2 endpoint for the SO service
+    port = 8000 # OSMr2 port for the SO service
+    default_kvm_datacenter = d4ec6514-4760-47f5-914e-df951ac20dec # UUID in OSM of a specific KVM-based VIM
+    default_docker_datacenter = 260c6bfc-5b52-4341-96a0-72cbd254c662 # UUID in OSM of a specific Docker-based VIM
+    default_kvm_datacenter_net = provider # name of the management network for the KVM-based VIM (connecting the NFVO to the VNFs)
+    default_docker_datacenter_net = default # name of the management network for the Docker-based VIM (connecting the NFVO to the VNFs)
+
+[package]
+    host = 10.102.10.50 # OSMr2 endpoint for the package operations
+    port = 443 # OSMr2 port for the package operations
+
+[ro]
+    host = 10.102.10.50 # OSMr2 endpoint for the RO service
+    port = 9090 # OSMr2 port for the RO service
+
+# OSMr4/OSMr5 configuration
+[nbi]
+    protocol = https # protocol under which OSM is served
+    host = 10.102.10.51 # OSMr5 exposed endpoint
+    port = 9999 # OSMr5 exposed port
+    username = admin # username to access the OSMr5 endpoint
+    password = admin # password to access the OSMr5 endpoint
+    default_kvm_datacenter = d4ec6514-4760-47f5-914e-df951ac20dec # UUID in OSM of a specific KVM-based VIM
+    default_docker_datacenter = 260c6bfc-5b52-4341-96a0-72cbd254c662 # UUID in OSM of a specific Docker-based VIM
+    default_kvm_datacenter_net = provider # name of the management network for the KVM-based VIM (connecting the NFVO to the VNFs)
+    default_docker_datacenter_net = default # name of the management network for the Docker-based VIM (connecting the NFVO to the VNFs)
+    default_flavor = m1.small # default flavour to be used in OpenStack</pre>
+						</dd>
+						<dt>nfvo.mspl.conf</dt>
+					  <dd>
+							Configuration of the MSPL-related operations to be received by the vNSFO API.
+							<pre>[monitoring]
+    timeout = 3600 # time (in milliseconds) to wait for outcome of the monitoring process to check the operational and configuration status for the instantiated VNFs
+    interval = 5 # time (in seconds) between the monitoring process is called again
+    target_status = running # target status that a VNF should reach to consider the instantiation to be successful</pre>
+						</dd>
+						<dt>sdn.conf</dt>
+					  <dd>
+							Data related to the SDN controller and the network device the vNSFO API interacts with. <strong>Note</strong> that 1 controller (ODL Carbon) and 1 device are allowed.
+							<pre>[general]
+    push_delay = 10000 # delay between pushing any rule and attesting (in milliseconds)
+
+[controller]
+    protocol = http # protocol under which ODL is served
+    host = 10.102.10.52 # ODL exposed endpoint
+    port = 8181 # ODL exposed port
+    username = admin # username to access ODL
+    password = admin # password to access ODL
+
+[infrastructure]
+    default_device = openflow:112591078470795328 # dpid of the switch
+    default_table = 0 # default table</pre>
+						</dd>
+						<dt>tm.conf</dt>
+					  <dd>
+							Configuration to reach the Trust Monitor instance.
+							<pre>[general]
+    host = 10.102.10.53 # Trust Monitor exposed address
+    port = 443 # Trust Monitor exposed port
+    protocol = https # protocol under which the Trust Monitor is served
+    default_analysis_type = load-time+cont-check,l_req=l4_ima_all_ok|==,cont-list= # identifier of the analysis to carry out
+    default_pcr0 = example # default PCR0 value
+    default_distribution = CentOS7 # default Operating System distribution for the attestation
+    default_driver = linux # default driver to perform the attestation
+    default_node = nfvi-node # name in OSM of the default Docker-based VIM to attest</pre>
+						</dd>
+						<dt>tm.sdn.reference.json</dt>
+					  <dd>
+							Trusted set of flows that act as a reference for the SDN attestation of the flows in the switch.
+							This equals to the compressed JSON output of the operational endpoint (e.g., "<em>http://10.102.10.52:8181/restconf/operational/opendaylight-inventory:nodes/node/openflow:112591078470795328/flow-node-inventory:table/0</em>") in ODL.
+						</dd>
+					</dl>
+
+				</li>
+				<li>
+					Start the component:
+					<pre>./setup.sh</pre>
+					Initially this will create both the volumes for the vNSFO API and the DB. In subsequent runs, the DB volume will be retained and re-used from disk
+				</li>
+				<li>
+					Access the component via your browser or via cURL calls. Point to the address "(https_enabled?https:http)://$host:$port" (values defined in "api.conf"). The reference documentation for the REST API calls is defined there
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>./teardown.sh</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h2>Trusted Infrastructure</h2>
+
+		<a name="trust-monitor"></a><br/>
+    <h3>Trust Monitor</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/trust-monitor' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/trust-monitor' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/trust-monitor' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					Install Docker:
+					<pre>sudo apt-get remove docker docker-engine docker.io
+sudo apt-get update
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install docker-ce</pre>
+					Also install Docker-compose:
+					<pre>sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose</pre>
+				</li>
+				<li>
+					Adapt the configuration with your values of choice
+					<dl class="dl-horizontal">
+						<dt>trust_monitor_<br/>django/settings.py</dt>
+						<dd>
+							Configuration to reach the Trust Monitor instance. At least the following must be configured:
+							<pre>CASSANDRA_LOCATION = $WHITELIST_DB_IP # instance running the white-list database
+CASSANDRA_PORT = '9160' # default port where Cassandra runs</pre>
+						</dd>
+					</dl>
+				</li>
+				<li>
+					Start the component:
+					<pre>docker-compose up --build</pre>
+				</li>
+				<li>
+					Access the component via your browser or via cURL calls. Point to the address "http://$host_ip:8443" (the IP of the node where the component runs).
+					The following list of endpoints are available:
+					<ul>
+						<li>
+							Status information on the application: GET on https://$host_ip:443/status/
+						</li>
+						<li>
+							Registration of a node: https://$host_ip:443/register_node/
+							<ul>
+								<li>
+									POST with body: '{"distribution": "<distro (e.g. CentOS7/HPE)>", "hostName": "<host name>",
+	"driver":"OAT/OpenCIT/HPESwitch", "address": "xxx.xxx.xxx.xxx"}'
+								</li>
+								<li>
+									DELETE with body: '{"hostName": "<node-to-unregister>"}'
+								</li>
+							</ul>
+						</li>
+						<li>
+							Attestation of a node: https://$host_ip:443/attest_node/
+							<ul>
+								<li>
+									GET to https://$host_ip:443/nfvi_pop_attestation_info?node_id=<id> or to https://$host_ip:443/nfvi_attestation_info/
+								</li>
+								<li>
+									POST with body: '{"node_list" : [{"node" : "<host name>"}]}'
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>docker-compose rm</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h2>Big Data Analytics</h2>
+
+		<a name="security-dashboard"></a><br/>
+		<h3>Security Dashboard</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/dashboard' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies.<br/>
+					First, the python-pip <a class="page-link" href="{{ '/dashboard' | prepend: site.githuburl }}/blob/master/docker/requirements-dashboard.txt" title="requirements" target="_new">requirements</a>: <pre>pip install -r requirements-store.txt</pre>
+					Also install Docker:
+					<pre>sudo apt-get install --no-install-recommends apt-transport-https curl software-properties-common python-pip
+curl -fsSL 'https://sks-keyservers.net/pks/lookup?op=get&search=0xee6d536cf7dc86e2d7d56f59a178ac6c6238f52e' | sudo apt-key add -
+sudo add-apt-repository "deb https://packages.docker.com/1.13/apt/repo/ubuntu-$(lsb_release -cs) main"
+sudo apt-get update
+sudo apt-get -y install docker-engine
+sudo pip install docker-compose</pre>
+				</li>
+				<li>
+					Start the component:
+					<pre>cd docker && ./run.sh --environment .env.production --verbose</pre>
+					Then run the following to create the needed persistence volume:
+					<pre>docker exec -it docker_dashboard-persistence_1 bash -c "/usr/share/dev/dashboard/docker/setup-datastore.sh --environment .env.production"</pre>
+				</li>
+				<li>
+					Access the component via your browser or via cURL calls. Point to the address "http://$host_ip/#/shield/home/dashboard" (the IP of the node where the component runs).
+				</li>
+				<li>
+					When you no longer wish to use the component, you may stop its containers:
+					<pre>cd docker && ./run.sh --shutdown</pre>
+					And also prune the system for unused resources:
+					<pre>docker system prune; docker system prune --volumes</pre>
+				</li>
+			</ol>
+		</p>
+
+		<a name="data-acquisition-storage"></a><br/>
+		<h3>Data acquisition and storage</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Install the dependencies for the component:
+					<ul>
+						<li>
+							<a class="page-link" href="http://spark.apache.org/docs/latest/#launching-on-a-cluster" title="Spark installation" target="_new">Spark 2.2</a>
+						</li>
+						<li>
+							<a class="page-link" href="https://bigdl-project.github.io/0.8.0/" title="BigDL documentation" target="_new">BigDL 0.8.0</a>
+						</li>
+					</ul>
+					Then, install the python-pip packages: <pre>pip install pyspark==2.2.0.post0</pre>
+				</li>
+			</ol>
+		</p>
+
+		<a name="dare-workers"></a><br/>
+		<h3>DARE Workers</h3>
+
+		<h4>Streaming Worker</h4>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/dare-workers' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					Install the dependencies for the component.<br/>
+					First, the packages from the Operating System: <pre>sudo apt-get install python-pip python-virtualenv zip</pre>
+					Then, install the python-pip packages: <pre>pip install avro</pre>
+				</li>
+				<li>
+					Adapt the configuration with your values of choice
+					<dl class="dl-horizontal">
+						<dt>.worker.json</dt>
+						<dd>
+							Configuration of a given worker:
+							<pre>{
+  "database": "spotdb", # name of the Hive DB where data is ingested
+  "kerberos": { # configuration for the network authentication protocol
+    "kinit": "/usr/bin/kinit",
+    "principal": "spotuser",
+    "keytab": "/opt/security/spotuser.keytab"
+  },
+  "zkQuorum": "cloudera01:2181" # Zookeeper connection string
+}</pre>
+						</dd>
+					</dl>
+				</li>
+				<li>
+					Start the component:
+					<pre>./run.sh -t "pipeline_configuration" --topic "my_topic" -p "num_of_partition"
+# Examples
+./run.sh -t flow --topic SPOT-INGEST-TEST-TOPIC -p 1
+./run.sh -t flow --topic SPOT-INGEST-TEST-TOPIC -p 1 2>/tmp/spark2-submit.log
+./run.sh -t dns --topic SPOT-INGEST-DNS-TEST-TOPIC -p 2 -a AppIngestDNS -b 10 -g DNS-GROUP</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h4>Simple Worker</h4>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Download the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}" title="source code" target="_new">source code</a>: <pre>git clone {{ '/dare-workers' | prepend: site.githuburl }}.git</pre>
+				</li>
+				<li>
+					Move ("cd") to the downloaded folder and read the <a class="page-link" href="{{ '/dare-workers' | prepend: site.githuburl }}/blob/master/README.md" title="README file" target="_new">README file</a>
+				</li>
+				<li>
+					First, the packaes from the Operating System: <pre>sudo apt-get -y install python-virtualenv</pre>
+					Then, install the python-pip packages: <pre>virtualenv --no-site-packages venv
+source venv/bin/activate
+pip install -r requirements.txt</pre>
+				</li>
+				<li>
+					Install the worker
+					<pre>python setup.py install</pre>
+				</li>
+				<li>
+					Adapt the configuration with your values of choice
+					<dl class="dl-horizontal">
+						<dt>.worker.json</dt>
+						<dd>
+							Configuration of a given worker:
+							<pre>{
+	"consumer": { # configuration parameters for the KafkaConsumer
+		"bootstrap_servers": ["kafka_server:kafka_port"],
+		"group_id": ""
+	},
+	"kerberos": { # configuration for the network authentication protocol
+		"kinit": "/usr/bin/kinit",
+		"principal": "user",
+		"keytab": "/opt/security/user.keytab"
+	},
+}
+</pre>
+						</dd>
+					</dl>
+				</li>
+				<li>
+					Start the component:
+					<pre>s-worker --topic "my_topic" -p "num_of_partition" -d "path_to_HDFS"
+# Examples
+s-worker --topic SPOT-INGEST-TEST-TOPIC -p 0 -d /user/spotuser/flow/stage
+s-worker --topic SPOT-INGEST-DNS-TEST-TOPIC -p 0 -d /user/spotuser/dns/stage --parallel-processes 8 -i 30
+s-worker --topic SPOT-INGEST-TEST-TOPIC -p 2 -d /user/spotuser/flow/stage -l DEBUG</pre>
+				</li>
+				<li>
+					When you no longer wish to use the component, you may deactivate its virtual environment:
+					<pre>deactivate
+rm -r venv/</pre>
+				</li>
+			</ol>
+		</p>
+
+		<h2>Infrastructure</h2>
+
+		<a name="big-data-cluster"></a><br/>
+		<h3>Big Data cluster</h3>
+		<p class="text-justify">
+			<ol>
+				<li>
+					Install the dependencies for the Spot framework:
+					<ul>
+						<li>
+							<a class="page-link" href="https://www.cloudera.com/downloads/manager/5-12-0.html" title="Cloudera Express documentation" target="_new">Cloudera Express 5.12.0</a>
+						</li>
+						<li>
+							Java HotSpot(TM) 64-Bit Server VM, version 1.8.0_151
+						</li>
+						<li>
+							The following <a class="page-link" href="https://www.cloudera.com/documentation/enterprise/release-notes/topics/cm_vd_cdh_package_tarball_512.html#concept_e2c_aon_yk" title="Cloudera Express services" target="_new">Cloudera Express services</a>: HDFS, HIVE, IMPALA, SPARK (yarn) (spark 1.6 and spark 2.3), YARN, ZOOKEEPER
+						</li>
+					</ul>
+					And finally install <a class="page-link" href="http://spot.incubator.apache.org/doc/" title="Spot documentation" target="_new">Spot</a>.
+				</li>
+				<li>
+					Install the following Spot components:
+					<ul>
+						<li>
+							<strong>spot-setup</strong>: scripts that create the required HDFS paths, HIVE tables and configuration for Apache Spot (incubating).  Must be located in the Ingest VM
+						</li>
+						<li>
+							<strong>spot-ingest</strong>: binary and log files are captured or transferred into the Hadoop cluster, where they are transformed and loaded into solution data stores. Must be located in the Ingest VM
+						</li>
+						<li>
+							<strong>spot-ml</strong>: machine learning algorithms are used for anomaly detection. Must be located in the ClusterOrchestrator
+						</li>
+						<li>
+							<strong>spot-oa</strong>: data output from the machine learning component is augmented with context and heuristics, then is available to the user for interacting with it. Must be located in the ClusterOrchestrator
+						</li>
+					</ul>
+				</li>
+				<li>
+					The nodes available to the Big Data cluster must each have a defined role in Cloudera:
+					<ul>
+						<li>
+							<strong>Orchestrator</strong>: configured as the Master Node, includes all the management services and required gateways. Moreover, the ML and OA components are located in this host
+						</li>
+						<li>
+							<strong>Worker 1</strong>: configured as a Worker Node
+						</li>
+						<li>
+							<strong>Worker 2</strong>: configured as a Worker Node
+						</li>
+						<li>
+							<strong>Ingest (big-shield)</strong>: configured as a Ingest Node. Includes the Impala and HIVE components
+						</li>
+					</ul>
+				</li>
+				<li>Configure the services in Cloudera as follows:
+					<dl class="dl-horizontal">
+						<dt>HDFS</dt>
+					  <dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Balancer		N/A		ClusterOrchestrator	Commissioned		Balancer Default Group
+DataNode		Started		worker2			Commissioned		DataNode Default Group
+DataNode		Started		worker1			Commissioned		DataNode Default Group
+NameNode (Active)	Started		ClusterOrchestrator	Commissioned		NameNode Default Group
+SecondaryNameNode	Started		ClusterOrchestrator	Commissioned		SecondaryNameNode Default Group</pre>
+						</dd>
+					  <dt>HIVE</dt>
+					  <dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Gateway			N/A		worker2			Commissioned		Gateway Default Group
+Gateway			N/A		worker1			Commissioned		Gateway Default Group
+Gateway			N/A		ClusterOrchestrator	Commissioned		Gateway Default Group
+Gateway			N/A		big-shield		Commissioned		Gateway Default Group
+Hive Metastore Server	Started		ClusterOrchestrator	Commissioned		Hive Metastore Server Default Group
+HiveServer2		Started		ClusterOrchestrator	Commissioned		HiveServer2 Default Group</pre>
+						</dd>
+						<dt>Impala</dt>
+					  <dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Impala Catalog Server	Started		ClusterOrchestrator	Commissioned		Impala Catalog Server Default Group
+Impala Daemon		Started		worker2			Commissioned		Impala Daemon Default Group
+Impala Daemon		Started		worker1			Commissioned		Impala Daemon Default Group
+Impala Daemon		Started		ClusterOrchestrator	Commissioned		Impala Daemon Default Group
+Impala Daemon		Stopped		big-shield		Commissioned		Impala Daemon Default Group
+Impala StateStore	Started		ClusterOrchestrator	Commissioned		Impala StateStore Default Group</pre>
+						</dd>
+						<dt>Kafka</dt>
+						<dd>
+							<pre>Role Type				State		Host			Commission State	Role Group
+Kafka Broker (Active Controller)	Started		ClusterOrchestrator	Commissioned		Kafka Broker Default Group
+Kafka Broker				Started		big-shield		Commissioned		Kafka Broker Default Group</pre>
+						</dd>
+						<dt>Spark</dt>
+						<dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Gateway			N/A		worker2			Commissioned		Gateway Default Group
+Gateway			N/A		worker1			Commissioned		Gateway Default Group
+Gateway			N/A		ClusterOrchestrator	Commissioned		Gateway Default Group
+Gateway			N/A		big-shield		Commissioned		Gateway Default Group
+History Server		Started		ClusterOrchestrator	Commissioned		History Server Default Group</pre>
+						</dd>
+						<dt>Spark 2</dt>
+						<dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Gateway			N/A		worker2			Commissioned		Gateway Default Group
+Gateway			N/A		worker1			Commissioned		Gateway Default Group
+Gateway			N/A		ClusterOrchestrator	Commissioned		Gateway Default Group
+Gateway			N/A		big-shield		Commissioned		Gateway Default Group
+History Server		Started		ClusterOrchestrator	Commissioned		History Server Default Group</pre>
+						</dd>
+						<dt>YARN <br/>(MR2 included)</dt>
+						<dd>
+							<pre>Role Type		 State		Host			Commission State	Role Group
+Gateway			 N/A		big-shield		Commissioned		Gateway Default Group
+JobHistory Server	 Started	ClusterOrchestrator	Commissioned		JobHistory Server Default Group
+NodeManager		 Started	worker2			Commissioned		NodeManager Default Group
+NodeManager		 Started	worker1			Commissioned		NodeManager Default Group
+NodeManager		 Started	ClusterOrchestrator	Commissioned		NodeManager Default Group
+ResourceManager (Active) Started	ClusterOrchestrator	Commissioned		ResourceManager Default Group</pre>
+						</dd>
+						<dt>ZooKeeper</dt>
+						<dd>
+							<pre>Role Type		State		Host			Commission State	Role Group
+Server			Started		worker1			Commissioned		Server Default Group
+Server			Started		ClusterOrchestrator	Commissioned		Server Default Group
+Server			Started		big-shield		Commissioned		Server Default Group</pre>
+						</dd>
+					</dl>
+				</li>
+			</ol>
+		</p>
+
+		<a name="vnf-vim"></a><br/>
+		<h3>VIM for the VNFs</h3>
+		<p class="text-justify">
+			In SHIELD, the VIMs in use are both OpenStack (All-in-One, running on top of Centos 7 - centos-release-7-4.1708.el7.centos.x86_64) and vim-emu (a VIM that supports Docker and offers virtualised APIs for OpenStack)
+		</p>
+
+		<a name="nfvo"></a><br/>
+		<h3>NFVO</h3>
+		<p class="text-justify">
+			In SHIELD, the NFVO of choice is OSM. The supported releases are TWO, FOUR, FIVE.
+		</p>
+
+		<h4>OSM release FIVE</h4>
+		<p class="text-justify">
+			OSM releases FOUR and FIVE introduced several changes w.r.t release TWO, both at the end-user side and at the northbound APIs.
+			<ol>
+				<li>
+					Install and configure OSM in your environment by following these <a class="page-link" href="https://osm.etsi.org/wikipub/index.php/OSM_Release_FIVE#Install_OSM_Release_FIVE" title="installation guide" target="_new">installation steps</a>
+				</li>
+				<li>
+					Setup the network configuration.<br/>
+					OSM must be running in a server that is connected to the NFVI PoP (that is, where the VNFs will be instantiated and running). The network interconnecting the OSM VM and the NFVI PoP is the network of "management" type and it is defined in the NFVI PoP itself. For instance, you may use a network called "provider" with range 10.102.10.0/24
+				</li>
+				<li>
+					Configure OSM by defining the VIM(s) with the following values: "<em>name, type=OpenStack, vim url (endpoint for the Openstack Identity service), vim username, vim password, tenant/project name, vim network name=provider</em>"
+				</li>
+			</ol>
+		</p>
+
+		<a name="sdn-controller"></a><br/>
+		<h3>SDN controller</h3>
+		<p class="text-justify">
+			In SHIELD, the SDN controller used in conjuction with the vNSF Orchestrator (specifically with the vNSFO API) and the Trust Monitor is OpenDayLight in its version "Carbon 0.6.3". The controller enables the control of the SDN switch and allows to dynamically manage its network flow rules.
+		</p>
+
+		<p class="text-justify">
+			<ol>
+				<li>
+					Install Java. It should match the following version:<br/>
+					openjdk version "1.8.0_212"<br/>
+					OpenJDK Runtime Environment (build 1.8.0_212-8u212-b03-0ubuntu1.16.04.1-b03)<br/>
+					OpenJDK 64-Bit Server VM (build 25.212-b03, mixed mode)
+				</li>
+				<li>
+					Download the <a class="page-link" href="https://nexus.opendaylight.org/content/repositories/public/org/opendaylight/integration/distribution-karaf/0.6.3-Carbon/distribution-karaf-0.6.3-Carbon.tar.gz" title="OpenDayLight Carbon 0.6.3" target="_new">OpenDayLight Carbon 0.6.3</a> compressed file
+				</li>
+				<li>
+					Uncompress the file
+					<pre>tar zxvf distribution-karaf-0.6.3-Carbon.tar.gz</pre>
+				</li>
+				<li>
+					Move to the binaries folder and run the Karaf subsystem binary
+					<pre>cd bin
+./start</pre>
+				</li>
+				<li>
+					Access the Karaf console. Since OpenDaylight does not support the control of layer 2 devices out of the box, multiple other features are required to enable this functionality. This will be configured controller
+					<pre>ssh karaf@127.0.0.1 -p 8101 # use "karaf" as password
+feature:install odl-mdsal-models odl-aaa-shiro odl-akka-scala-2.11 odl-akkasystem-2.4 odl-akka-clustering-2.4 odl-akka-leveldb-0.7 odl-akkapersistence-2.4 odl-netty odl-netty-4 odl-guava-18 odl-lmax-3 odl-triemap0.2 odl-restconf-all odl-restconf odl-restconf-noauth odl-mdsal-apidocs odlyangtools-yang-data odl-yangtools-common odl-yangtools-yang-parser odl-aaaapi odl-aaa-authn odl-aaa-encryption-service odl-aaa-cert odlopenflowplugin-southbound-he odl-openflowplugin-nsf-model-he odlopenflowplugin-app-lldp-speaker-he odl-mdsal-dom odl-mdsal-common odl-mdsaldom-api odl-mdsal-dom-broker odl-mdsal-binding-base odl-mdsal-bindingruntime odl-mdsal-binding-api odl-mdsal-binding-dom-adapter odl-mdsal-eoscommon odl-mdsal-eos-dom odl-mdsal-eos-binding odl-mdsal-singleton-common odl-mdsal-singleton-dom standard config region package http war kar ssh management odl-openflowplugin-flow-services-ui odl-openflowplugin-flowservices-rest odl-openflowplugin-flow-services odl-openflowplugin-southbound odl-openflowplugin-nsf-model odl-openflowplugin-app-config-pusher odlopenflowplugin-app-topology odl-openflowplugin-app-forwardingrules-manager odl-l2switch-switch odl-l2switch-switch-rest odl-l2switch-switch-ui odll2switch-hosttracker odl-l2switch-addresstracker odl-l2switch-arphandler odl-l2switch-loopremover odl-l2switch-packethandler odl-dluxappsapplications odl-dluxapps-nodes odl-dluxapps-topology odl-dluxapps-yangui odl-dluxapps-yangman odl-dluxapps-yangvisualizer pax-jetty pax-http paxhttp-whiteboard pax-war odl-config-persister odl-config-startup odl-dluxcore odl-config-netty odl-config-api odl-config-netty-config-api odl-configcore odl-config-manager odl-openflowjava-protocol odl-mdsal-all odl-mdsalcommon odl-mdsal-broker-local odl-toaster odl-mdsal-xsql odl-mdsalclustering-commons odl-mdsal-distributed-datastore odl-mdsal-remoterpcconnector odl-mdsal-broker</pre>
+				</li>
+				<li>
+					Setup the network configuration
+					<ul>
+						<li>
+							The VM where ODL runs must be in the same network as the SDN-enabled switch. For instance, the ODL VM used in the project runs on a server that is connected to the switch via an intermediate switch that is tagged with an appropriate VLAN. Other possible setups would be to physically connect one interface of such server to the switch
+						</li>
+						<li>
+							The setup of the interfaces is as follows:
+							<ul>
+								<li>
+									The server has a bridge that links i) the interface connected to the switch with ii) the interface assigned to the VLAN in use for the switch (as well as external connectivity)
+								</li>
+								<li>
+									The ODL VM has one interface connected to a virtual network (e.g., 10.102.20.0/24)
+								</li>
+							</ul>
+							In summary, the IP of the bridge in the server (e.g., 10.102.20.3) and the IP of the interface of the ODL VM (e.g., 10.102.20.9) must be in the same range.
+					</ul>
+				</li>
+				<li>
+					Enable TLS encryption of the OpenFlow traffic. To do so, a CA must be created.<br/>
+					The intermediate pair must be skipped if the switch does not support chained certificates. The leaf certificates are signed directly with the root certificate by using the “policy_loose” preset.<br/><br/>
+
+					On the switch, commands similar to the following ones (for HP Aruba 3800) must be issued
+					<pre>config term
+crypto pki ta-profile <CAProfile>
+copy tftp ta-certificate <CAProfile> <tftp server IP address> <certificate file>
+crypto pki identity-profile SwitchIdentity subject <name/switch serial number>
+crypto pki create-csr certificate-name <certName> ta-profile <CAProfile>
+usage openflow</pre>
+					This will generate a Certificate Signing Request (CSR) in the terminal. The corresponding certificate, using the “usr_cert“ preset, is created and then installed with the following command:
+					<pre>crypto pki install-signed-certificate</pre><br/>
+
+					For ODL, a certificate must first be generated by using the "server_cert" preset
+					<pre>sudo openssl pkcs12 -export -in <ODLCert.pem> -inkey <ODLPrivkey.pem> -out ctl.p12 -name <odlserver></pre>
+					The export password must be set to "opendaylight" (otherwise the ODL configuration shall be changed according to the password of choice). Note that the following commands use this default password.<br/>
+					Then, the certificate must be imported to the keystore
+					<pre>keytool -importkeystore -deststorepass opendaylight -destkeypass opendaylight -destkeystore ctl.jks -srckeystore ctl.p12 -srcstoretype PKCS12 -srcstorepass opendaylight -alias odlserver</pre>
+					Also, the switch certificate must be imported into the truststore:
+					<pre>keytool -importcert -file SwitchCert.pem -keystore truststore.jks -storepass opendaylight</pre><br/>
+
+					Then the Java Key Store (JKS files: ctl.jks and truststore.jks) files are copied into the ODL folder “./configuration/ssl”<br/>
+
+					Finally, TLS is enabled in the OpenFlow connection via the following configuration (in file "/etc/opendaylight/datastore/initial/config/default-openflowconnection-config.xml")
+					<pre>&lt;transport-protocol&gt;TLS&lt;/transport-protocol&gt;<br/>&lt;tls&gt;<br/>   &lt;keystore&gt;configuration/ssl/ctl.jks&lt;/keystore&gt;<br/>   &lt;keystore-type&gt;JKS&lt;/keystore-type&gt;<br/>   &lt;keystore-path-type&gt;PATH&lt;/keystore-path-type&gt;<br/>   &lt;keystore-password&gt;opendaylight&lt;/keystore-password&gt;<br/>   &lt;truststore&gt;configuration/ssl/truststore.jks&lt;/truststore&gt;<br/>   &lt;truststore-type&gt;JKS&lt;/truststore-type&gt;<br/>   &lt;truststore-path-type&gt;PATH&lt;/truststore-path-type&gt;<br/>   &lt;truststore-password&gt;opendaylight&lt;/truststore-password&gt;<br/>   &lt;certificate-password&gt;opendaylight&lt;/certificate-password&gt;<br/>&lt;/tls&gt;</pre>
+			 </li>
+		 </ol>
+
+	</div>
+</div>
